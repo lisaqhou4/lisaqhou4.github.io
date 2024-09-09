@@ -35,14 +35,18 @@
 
     <section class="section" id="overview">
         <h2>Brief Overview of the Project</h2>
-        <p>The aim of this assignment is to use image processing techniques to create a color image from the digitized Prokudin-Gorskii glass plate images with minimal visual artifacts. To achieve this, I separated the three color channel images, stacked them, and aligned them properly to form a single RGB color image. All image processing functions are written by myself, and I also explored several different methods to improve the colored image quality. </p>
+        <p>The objective of this assignment is to utilize image processing techniques to reconstruct a color image from digitized Prokudin-Gorskii glass plate images while minimizing visual artifacts. 
+            Each glass plate image contains three separate exposures corresponding to the blue, green, and red channels. To create a single RGB image, the three color channel images are separated, stacked, 
+            and then aligned accurately. All image processing functions were implemented from scratch, and several methods were explored to enhance the quality of the final color image. </p>
     </section>
 
     <section class="section" id="approach">
         <h2> Basic Approach</h2>
-        <p>The glass image is first divided along the y-axis into the corresponding three color channels, then using the Normalized Cross-Correlation (NCC) score, 
-            the green channel and red channel are aligned to the blue channel to calculate the optimal (x,y) translation to align the three channels. Because the pixels at the edge of the image are more likely to be distored, pixels at the border (border pixels = 15pixels) are ignored when calculating the NCC score. 
-            For the smaller size image, an exhaustive search approach is used, where over a window size = 20 pixels, the optimal translation is calculated, this takes around 40s to finish. </p>
+        <p>The initial approach involves dividing the glass plate image along the y-axis into three separate color channels: blue, green, and red. The blue channel is considered the reference, and the goal is to align the green and red channels to it. To achieve this, the Normalized Cross-Correlation (NCC) score is employed to compute the optimal (x, y) translation that minimizes the misalignment between channels.  To calculate the NCC score, each image is first converted to zero-mean by subtracting its mean. Then, the Frobenius norm is computed to normalize these images to unit length. The NCC score is the dot product of the normalized images, where a higher score indicates better alignment.
+
+            The pixel values at the edges of the image are often distorted or contain irrelevant data; therefore, a border of 15 pixels is ignored during the NCC score calculation to avoid any influence from them.
+            
+            For smaller images (300x300), an exhaustive search method is used to find the optimal alignment. This method searches over a window size of 20 pixels around the initial alignment and calculates the NCC score for each potential translation. This approach takes around ~40s to complete for small images.  </p>
         <div class="image-container"></div>
             <div>
                 <img src="/media/cathedral.jpg" alt="Example for the exhaustive approch">
@@ -52,10 +56,12 @@
 
     <section class="section" id="approach">
         <h2> Pyramid Alignment Speed up</h2>
-        <p> While the basic approach can calcualte an alignment result relatively fast, for larger image (3000, 3000), using an exhausitve approach can take around 6 minutes. Thus, I implemented a pyramid search process to speed up the alignment process. 
-            The pyramid search process starts the alignment process at a coarse level of the image with a larger window size and sequentailly upsample the image size while decreasing the window size. The translation calculated at each level is accumulated to 
-        produce the final translation used to align the image. Using this apporach, the alignment process time is shorten to ~ 1 min. </p>
-        <div class="image-container"></div>
+        <p> While the basic exhaustive search approach is effective for small images, it becomes impractical for larger images (e.g., 3000x3000 pixels), where the exhaustive method can take approximately 6 minutes. To address this, a pyramid search process is implemented to accelerate the alignment.
+
+            The pyramid search approach starts by aligning the image at a coarse level with a reduced resolution, using a larger search window. It then sequentially upsamples the image resolution while decreasing the search window size. At each level of the pyramid, the optimal translation is calculated and accumulated to refine the alignment further. This hierarchical method allows for a more efficient search and significantly reduces the computational time to around 1 minute for larger images. </p>
+        
+            For the pyramid search apporach used, a total of 4 levels are used with a initalized window size of 5 pixels (finest level) and a window size increment of 5 for each level. The pyramid search approach has significantly improved the alignment process for larger images. </p>
+            <div class="image-container"></div>
             <div>
                 <img src="/media/cathedral.jpg" alt="Example for the exhaustive approch">
             </div>
@@ -64,9 +70,9 @@
 
     <section class="section" id="approach">
         <h2> Automatic Cropping</h2>
-        <p> While the basic approach produced acceptable results on simple cases, for images where the edge have white or black borders, the alignment process can be less ideal as the extreme pixel values of the borders
-            interfere with the NCC values and produce less aligned image:. To address this issue, I implemented an automatic cropping function that removes the border pixels from the image before alignment.  The function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values. 
-            This approach has significantly improved the alignment results on images with white or black borders. </p> 
+        <p> In some cases, images may have white or black borders that adversely affect the alignment process because these extreme pixel values can skew the NCC calculation, leading to poor alignment. To handle such cases, an automatic cropping function is introduced.
+
+            The cropping function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values (where average values larger then 0.9 and less than 0.15 indicates white and black borders respectively). Based on a predefined threshold, these border regions are automatically cropped from the three channels before alignment, eliminating their influence on the NCC calculation. This preprocessing step greatly improves alignment results, especially for images with large or irregular borders. </p> 
         </p>
         <div class="image-container"></div>
             <div>
@@ -81,10 +87,11 @@
 
     <section class="section" id="approach">
         <h2> Sobel Edge Detector </h2>
-        <p> Using the r g b color channel pixel value to calcualte the NCC score and align the image can fail when the pixel values in the color channels are less balance and so the NCC function can misalign the three channels (The Emir's blue jacket shows up as pixels ≈≈1 in the blue channel image, but much less light/information is captured in the green and red channels.) In this case, using other feature
-            to calcualte the alignment score can be more effective. I implemented a Sobel edge detector to calculate the edge of the image and use the edge pixel values to calculate the NCC score. This approach has improved the alignment results on images with less balanced color channels.
+        <p> Using the raw RGB color channel pixel values to calculate the NCC score for alignment can fail when the channels are imbalanced in terms of light or information captured. For example, in the Emir's image, his blue jacket appears prominently in the blue channel but is much less visible in the green and red channels, leading to misalignment when relying on pixel values alone. To address this, I implemented a Sobel Edge Detector to extract edge features from the image and use them for image alignment. The Sobel Edge Detector is a popular image processing technique used to highlight edges within an image by calculating the gradient magnitude of pixel intensities. It works by applying two convolutional kernels (one for detecting changes in the x-direction and another in the y-direction) to approximate the image's first derivative. This results in an image where edges are highlighted, which is useful for edge detection and feature extraction.
+
+            By aligning the images based on their edge features rather than raw pixel values, this approach provides a more consistent alignment for images with uneven color distribution. 
         </p> 
-        </p>
+
         <div class="image-container"></div>
             <div>
                 <img src="/media/cathedral.jpg" alt="Example of less aligned image">
