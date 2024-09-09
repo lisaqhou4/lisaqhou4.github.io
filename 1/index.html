@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Overview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .image-container img {
+            max-width: 200px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Project Overview</h1>
+    </header>
+
+    <section class="section" id="overview">
+        <h2>Brief Overview of the Project</h2>
+        <p>This section provides a brief overview of the project. Describe the project goal, the context, and any relevant background information.</p>
+    </section>
+
+    <section class="section" id="approach">
+        <h2>Approach</h2>
+        <p>In this section, describe the approach taken to solve the problem. If you encountered any issues, mention them here and explain the solutions or workarounds you tried.</p>
+    </section>
+
+    <section class="section" id="results">
+        <h2>Results on Example Images</h2>
+        <p>Here, you should display the results of your algorithm on all example images. List the offsets you calculated. Only use compressed images (e.g., jpg, png, gif) for display purposes.</p>
+        <div class="image-container">
+            <!-- Example of adding an image -->
+            <div>
+                <img src="./media/example1.jpg" alt="Result Image 1">
+                <p>Offset: (x, y)</p>
+            </div>
+            <div>
+                <img src="./media/example2.jpg" alt="Result Image 2">
+                <p>Offset: (x, y)</p>
+            </div>
+            <!-- Add more images as needed -->
+        </div>
+    </section>
+
+    <section class="section" id="custom-results">
+        <h2>Results on Selected Images from the Prokudin-Gorskii Collection</h2>
+        <p>Display the results of your algorithm on a few images from the Prokudin-Gorskii collection that you chose to work with.</p>
+        <div class="image-container">
+            <!-- Example of adding an image -->
+            <div>
+                <img src="./media/custom1.jpg" alt="Custom Image 1">
+                <p>Offset: (x, y)</p>
+            </div>
+            <!-- Add more images as needed -->
+        </div>
+    </section>
+
+    <section class="section" id="failures">
+        <h2>Failed Alignments</h2>
+        <p>If your algorithm failed to align any images, provide an explanation of why it happened and possible reasons for the failure.</p>
+    </section>
+
+    <section class="section" id="bells-and-whistles">
+        <h2>Bells and Whistles</h2>
+        <p>Describe any additional features or improvements you implemented. For maximum credit, show before and after images demonstrating the effects of these features.</p>
+        <div class="image-container">
+            <!-- Example of adding a before and after image -->
+            <div>
+                <img src="./media/before.jpg" alt="Before Image">
+                <p>Before Enhancement</p>
+            </div>
+            <div>
+                <img src="./media/after.jpg" alt="After Image">
+                <p>After Enhancement</p>
+            </div>
+            <!-- Add more images as needed -->
+        </div>
+    </section>
+    
+</body>
+</html>
