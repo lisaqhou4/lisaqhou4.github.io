@@ -35,15 +35,63 @@
 
     <section class="section" id="overview">
         <h2>Brief Overview of the Project</h2>
-        <p>The aim of this assignment is to use image processing techniques to create a color image from the digitized Prokudin-Gorskii glass plate images with minimal visual artifacts. To achieve this, I separated the three color channel images, stacked them, and aligned them properly to form a single RGB color image. All image processing functions are written by myself, and I also explored several different methods to improve the colored image qualitive. </p>
+        <p>The aim of this assignment is to use image processing techniques to create a color image from the digitized Prokudin-Gorskii glass plate images with minimal visual artifacts. To achieve this, I separated the three color channel images, stacked them, and aligned them properly to form a single RGB color image. All image processing functions are written by myself, and I also explored several different methods to improve the colored image quality. </p>
     </section>
 
     <section class="section" id="approach">
-        <h2>Approach</h2>
-        <p>The glass image is first divided along the y-axis into the corresponding three color channels, then the  </p>
+        <h2> Basic Approach</h2>
+        <p>The glass image is first divided along the y-axis into the corresponding three color channels, then using the Normalized Cross-Correlation (NCC) score, 
+            the green channel and red channel are aligned to the blue channel to calculate the optimal (x,y) translation to align the three channels. Because the pixels at the edge of the image are more likely to be distored, pixels at the border (border pixels = 15pixels) are ignored when calculating the NCC score. 
+            For the smaller size image, an exhaustive search approach is used, where over a window size = 20 pixels, the optimal translation is calculated, this takes around 40s to finish. </p>
         <div class="image-container"></div>
             <div>
-                <img src="/media/cathedral.jpg" alt="Example from the digitized Prokudin-Gorskii glass plate image">
+                <img src="/media/cathedral.jpg" alt="Example for the exhaustive approch">
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="approach">
+        <h2> Pyramid Alignment Speed up</h2>
+        <p> While the basic approach can calcualte an alignment result relatively fast, for larger image (3000, 3000), using an exhausitve approach can take around 6 minutes. Thus, I implemented a pyramid search process to speed up the alignment process. 
+            The pyramid search process starts the alignment process at a coarse level of the image with a larger window size and sequentailly upsample the image size while decreasing the window size. The translation calculated at each level is accumulated to 
+        produce the final translation used to align the image. Using this apporach, the alignment process time is shorten to ~ 1 min. </p>
+        <div class="image-container"></div>
+            <div>
+                <img src="/media/cathedral.jpg" alt="Example for the exhaustive approch">
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="approach">
+        <h2> Automatic Cropping</h2>
+        <p> While the basic approach produced acceptable results on simple cases, for images where the edge have white or black borders, the alignment process can be less ideal as the extreme pixel values of the borders
+            interfere with the NCC values and produce less aligned image:. To address this issue, I implemented an automatic cropping function that removes the border pixels from the image before alignment.  The function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values. 
+            This approach has significantly improved the alignment results on images with white or black borders. </p> 
+        </p>
+        <div class="image-container"></div>
+            <div>
+                <img src="/media/cathedral.jpg" alt="Example of less aligned image">
+            </div>
+
+            <div></div>
+                <img src="/media/cathedral.jpg" alt="Example of improved image">
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="approach">
+        <h2> Sobel Edge Detector </h2>
+        <p> While the basic approach produced acceptable results on simple cases, for images where the edge have white or black borders, the alignment process can be less ideal as the extreme pixel values of the borders
+            interfere with the NCC values and produce less aligned image:. To address this issue, I implemented an automatic cropping function that removes the border pixels from the image before alignment.  The function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values. 
+            This approach has significantly improved the alignment results on images with white or black borders. </p> 
+        </p>
+        <div class="image-container"></div>
+            <div>
+                <img src="/media/cathedral.jpg" alt="Example of less aligned image">
+            </div>
+
+            <div></div>
+                <img src="/media/cathedral.jpg" alt="Example of improved image">
             </div>
         </div>
     </section>
@@ -83,22 +131,7 @@
         <p>If your algorithm failed to align any images, provide an explanation of why it happened and possible reasons for the failure.</p>
     </section>
 
-    <section class="section" id="bells-and-whistles">
-        <h2>Bells and Whistles</h2>
-        <p>Describe any additional features or improvements you implemented. For maximum credit, show before and after images demonstrating the effects of these features.</p>
-        <div class="image-container">
-            <!-- Example of adding a before and after image -->
-            <div>
-                <img src="./media/before.jpg" alt="Before Image">
-                <p>Before Enhancement</p>
-            </div>
-            <div>
-                <img src="./media/after.jpg" alt="After Image">
-                <p>After Enhancement</p>
-            </div>
-            <!-- Add more images as needed -->
-        </div>
-    </section>
+
     
 </body>
 </html>
