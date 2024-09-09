@@ -81,9 +81,9 @@
 
     <section class="section" id="approach">
         <h2> Sobel Edge Detector </h2>
-        <p> While the basic approach produced acceptable results on simple cases, for images where the edge have white or black borders, the alignment process can be less ideal as the extreme pixel values of the borders
-            interfere with the NCC values and produce less aligned image:. To address this issue, I implemented an automatic cropping function that removes the border pixels from the image before alignment.  The function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values. 
-            This approach has significantly improved the alignment results on images with white or black borders. </p> 
+        <p> Using the r g b color channel pixel value to calcualte the NCC score and align the image can fail when the pixel values in the color channels are less balance and so the NCC function can misalign the three channels (The Emir's blue jacket shows up as pixels ≈≈1 in the blue channel image, but much less light/information is captured in the green and red channels.) In this case, using other feature
+            to calcualte the alignment score can be more effective. I implemented a Sobel edge detector to calculate the edge of the image and use the edge pixel values to calculate the NCC score. This approach has improved the alignment results on images with less balanced color channels.
+        </p> 
         </p>
         <div class="image-container"></div>
             <div>
