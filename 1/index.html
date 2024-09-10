@@ -30,8 +30,13 @@
 </head>
 <body>
     <header>
-        <h1>Project Overview</h1>
+        <h1>Project 1 Overview</h1>
     </header>
+
+    <section class="section" id="overview">
+        <p>Name: Lisa (Qi) Hou</p>
+        <p>Project 1 CS280A</p>
+    </section>
 
     <section class="section" id="overview">
         <h2>Brief Overview of the Project</h2>
@@ -274,25 +279,39 @@
         </div>
     </section>
     
-    
-    
-    <section class="section" id="custom-results">
+    <section class="section" id="approach">
+        <h2> Sobel Edge Detector </h2>
         <h2>Results on Selected Images from the Prokudin-Gorskii Collection</h2>
-        <p>Display the results of your algorithm on a few images from the Prokudin-Gorskii collection that you chose to work with.</p>
-        <div class="image-container">
-            <!-- Example of adding an image -->
-            <div>
-                <img src="./media/custom1.jpg" alt="Custom Image 1">
-                <p>Offset: (x, y)</p>
+
+        <div class="image-container" style="display: flex; gap: 20px; align-items: flex-start; justify-content: center;">
+
+            <!-- Image 1 with Caption -->
+            <div style="text-align: center; width: 400px;">
+                <img src="./media/emir_ori.jpg" alt="Example of less aligned image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <p>G: [45, -12]</p>
+                <p>R: [99, -28]</p>
             </div>
-            <!-- Add more images as needed -->
+        
+            <!-- Image 2 with Caption -->
+            <div style="text-align: center; width: 400px;">
+                <img src="./media/emir_pyramid_crop.jpg" alt="Example of less aligned image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <figcaption>Without Edge Detector</figcaption>
+                <p>G: [45, -12]</p>
+                <p>R: [99, -28]</p>
+            </div>
+        
+            <!-- Image 3 with Caption -->
+            <div style="text-align: center; width: 400px;">
+                <img src="./media/emir_pyramid_edge_aligned.jpg" alt="Example of improved image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <figcaption>With Edge Detector</figcaption>
+                <p>G: [49, 23]</p>
+                <p>R: [107, 40]</p>
+            </div>
+        
         </div>
+        
     </section>
 
-    <section class="section" id="failures">
-        <h2>Failed Alignments</h2>
-        <p>If your algorithm failed to align any images, provide an explanation of why it happened and possible reasons for the failure.</p>
-    </section>
 
 
     
