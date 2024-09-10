@@ -81,30 +81,35 @@
 
             The cropping function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values (where average values larger then 0.9 and less than 0.15 indicates white and black borders respectively). Based on a predefined threshold, these border regions are automatically cropped from the three channels before alignment, eliminating their influence on the NCC calculation. This preprocessing step greatly improves alignment results, especially for images with large or irregular borders. </p> 
         </p>
-        <div class="image-container" style="display: flex; gap: 20px; align-items: center;">
-             <!-- Image 1 with Caption -->
-             <div style="text-align: center;">
-                <img src="./media/lady_ori.jpg" alt="Example of less aligned image" style="max-width: 300px; height: auto; border: 1px solid #ddd; border-radius: 4px;">
-                <figcaption>Unaligned</figcaption>
-            </div>
+        <div class="image-container" style="display: flex; gap: 20px; align-items: flex-start;">
 
             <!-- Image 1 with Caption -->
-            <div style="text-align: center;">
-                <img src="./media/lady_pyramid_2.jpg" alt="Example of less aligned image" style="max-width: 300px; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+            <div style="text-align: center; width: 300px;">
+                <img src="./media/lady_ori.jpg" alt="Example of less aligned image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <figcaption>Unaligned</figcaption>
+                <!-- Adding empty paragraphs for consistency in layout -->
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+            </div>
+        
+            <!-- Image 2 with Caption -->
+            <div style="text-align: center; width: 300px;">
+                <img src="./media/lady_pyramid_2.jpg" alt="Example of less aligned image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
                 <figcaption>Without Automatic Cropping</figcaption>
                 <p>G: [57, -6]</p>
                 <p>R: [111, -17]</p>
             </div>
-    
-            <!-- Image 2 with Caption -->
-            <div style="text-align: center;">
-                <img src="./media/lady_pyramid_crop.jpg" alt="Example of improved image" style="max-width: 300px; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+        
+            <!-- Image 3 with Caption -->
+            <div style="text-align: center; width: 300px;">
+                <img src="./media/lady_pyramid_crop.jpg" alt="Example of improved image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
                 <figcaption>With Automatic Cropping</figcaption>
                 <p>G: [55, 7]</p>
                 <p>R: [114, 5]</p>
             </div>
-    
+        
         </div>
+        
     </section>
 
     <section class="section" id="approach">
