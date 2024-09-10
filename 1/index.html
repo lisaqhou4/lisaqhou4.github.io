@@ -119,23 +119,35 @@
             By aligning the images based on their edge features rather than raw pixel values, this approach provides a more consistent alignment for images with uneven color distribution. 
         </p> 
 
-        <div class="image-container" style="display: flex; gap: 20px; align-items: center;">
+        <div class="image-container" style="display: flex; gap: 10px; align-items: flex-start;">
 
             <!-- Image 1 with Caption -->
-            <div style="text-align: center;">
-                <img src="./media/cathedral.jpg" alt="Example of less aligned image" style="max-width: 300px; height: auto; border: 1px solid #ddd; border-radius: 4px;">
-                <figcaption>Without Sobel Edge Detector</figcaption>
-                <p>Offset: (x, y)</p>
+            <div style="text-align: center; width: 300px;">
+                <img src="./media/emir.jpg" alt="Example of less aligned image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <figcaption>Unaligned</figcaption>
+                <!-- Adding empty paragraphs for consistency in layout -->
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
             </div>
-    
+        
             <!-- Image 2 with Caption -->
-            <div style="text-align: center;">
-                <img src="./media/cathedral.jpg" alt="Example of improved image" style="max-width: 300px; height: auto; border: 1px solid #ddd; border-radius: 4px;">
-                <figcaption>With Sobel Edge Detector</figcaption>
-                <p>Offset: (x, y)</p>
+            <div style="text-align: center; width: 300px;">
+                <img src="./media/emir_pyramid_crop.jpg" alt="Example of less aligned image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <figcaption>Without Edge Detector</figcaption>
+                <p>G: [49, 23]</p>
+                <p>R: [107, 40]</p>
             </div>
-    
+        
+            <!-- Image 3 with Caption -->
+            <div style="text-align: center; width: 300px;">
+                <img src="./media/emir_pyramid_edge_aligned.jpg" alt="Example of improved image" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <figcaption>With Edge Detector</figcaption>
+                <p>G: [49, 23]</p>
+                <p>R: [107, 40]</p>
+            </div>
+        
         </div>
+        
     </section>
 
 
