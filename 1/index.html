@@ -81,7 +81,7 @@
 
             The cropping function calculates average pixel values of the top, bottom, left, and right borders of the image, and determines the crop values based on the threshold of the average pixel values (where average values larger then 0.9 and less than 0.15 indicates white and black borders respectively). Based on a predefined threshold, these border regions are automatically cropped from the three channels before alignment, eliminating their influence on the NCC calculation. This preprocessing step greatly improves alignment results, especially for images with large or irregular borders. </p> 
         </p>
-        <div class="image-container" style="display: flex; gap: 20px; align-items: flex-start;">
+        <div class="image-container" style="display: flex; gap: 10px; align-items: flex-start;">
 
             <!-- Image 1 with Caption -->
             <div style="text-align: center; width: 500px;">
@@ -156,7 +156,7 @@
         <h2>Results on Example Images</h2>
 
         <!-- Container for Grid Images -->
-        <div class="image-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; justify-items: center;">
+        <div class="image-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(5, auto); gap: 20px; justify-items: center;"></div>
     
             <!-- Image 1 -->
             <div style="text-align: center;">
