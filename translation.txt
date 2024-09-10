@@ -1,0 +1,76 @@
+
+
+Cathedral
+g alignment translation step: [5, 2]
+r alignment translation step: [10, 3]
+
+Monastery
+g alignment translation step: [-3, 2]
+r alignment translation step: [3, 2]
+
+
+Tobolsk
+g alignment translation step: [3, 3]
+r alignment translation step: [6, 3]
+
+Church
+g alignment translation step: [25, 4]
+r alignment translation step: [57, -5]
+
+Emir
+
+edge: 
+
+g alignment translation step: [49, 23]
+r alignment translation step: [107, 40]
+
+
+Harvester
+g alignment translation step: [59, 10]
+r alignment translation step: [120, 7]
+
+cropped:
+g alignment translation step: [60, 16]
+r alignment translation step: [124, 13]
+
+Icon
+
+g alignment translation step: [42, 16]
+r alignment translation step: [90, 22]
+
+g alignment translation step: [40, 17]
+r alignment translation step: [89, 23]
+
+Lady — Cropping Example
+
+g alignment translation step: [57, -6]
+r alignment translation step: [111, -17]
+
+g alignment translation step: [55, 7]
+r alignment translation step: [114, 5]
+
+Melons
+g alignment translation step: [82, 9]
+r alignment translation step: [178, 13]
+
+onion_church
+g alignment translation step: [51, 26]
+r alignment translation step: [108, 36]
+
+
+Sculpture
+g alignment translation step: [33, -11]
+r alignment translation step: [140, -26]
+
+Self portrait
+g alignment translation step: [79, 29]
+r alignment translation step: [176, 37]
+
+
+Three generations
+g alignment translation step: [54, 13]
+r alignment translation step: [109, 10]
+
+Train 
+g alignment translation step: [42, 4]
+r alignment translation step: [87, 31]
