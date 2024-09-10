@@ -68,7 +68,7 @@
         <h2> Pyramid Alignment Speed-up</h2>
         <p> While the basic exhaustive search approach is effective for small images, it becomes impractical for larger images (e.g., 3000x3000 pixels), where the exhaustive method can take approximately 6 minutes. To address this, a pyramid search process is implemented to accelerate the alignment.
 
-            The pyramid search approach starts by aligning the image at a coarse level with a reduced resolution, using a larger search window. It then sequentially upsamples the image resolution while decreasing the search window size. At each level of the pyramid, the optimal translation is calculated and accumulated to refine the alignment further. This hierarchical method allows for a more efficient search and significantly reduces the computational time to around 1 minute for larger images. </p>
+            The pyramid search approach starts by aligning the image at a coarse level with a reduced resolution, using a larger search window. It then sequentially upsamples the image resolution while decreasing the search window size. At each level of the pyramid, the optimal translation is calculated and accumulated to refine the alignment further. This hierarchical method allows for a more efficient search and significantly reduces the computational time to around 1m40s for larger images. </p>
         
             For the pyramid search apporach used, a total of 4 levels are used with a initalized window size of 5 pixels (finest level) and a window size increment of 5 for each level. The pyramid search approach has significantly improved the alignment process for larger images. 
         </p>
