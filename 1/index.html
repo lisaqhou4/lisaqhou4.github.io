@@ -38,7 +38,11 @@
         <p>The objective of this assignment is to utilize image processing techniques to reconstruct a color image from digitized Prokudin-Gorskii glass plate images while minimizing visual artifacts. 
             Each glass plate image contains three separate exposures corresponding to the blue, green, and red channels. To create a single RGB image, the three color channel images are separated, stacked, 
             and then aligned accurately. All image processing functions were implemented from scratch, and several methods were explored to enhance the quality of the final color image. </p>
-    </section>
+            <div>
+                <img src="./media/cathedral.jpg" alt="Example of the Prokudin-Gorskii glass plate images", height="500">
+                <figcaption>Example of the Prokudin-Gorskii glass plate images</figcaption>
+            </div>
+        </section>
 
     <section class="section" id="approach">
         <h2> Basic Approach</h2>
@@ -49,7 +53,8 @@
             For smaller images (300x300), an exhaustive search method is used to find the optimal alignment. This method searches over a window size of 20 pixels around the initial alignment and calculates the NCC score for each potential translation. This approach takes around ~40s to complete for small images.  </p>
         <div class="image-container"></div>
             <div>
-                <img src="./media/cathedral.jpg" alt="Example of the Prokudin-Gorskii glass plate images", height="200">
+                <img src="./media/cathedral_aligned.jpg" alt="Example of the exhaustive search result", height="500">
+                <figcaption>Aligned Color image of Cathedral.jpg</figcaption>
             </div>
         </div>
     </section>
