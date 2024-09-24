@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 2: Fun with Filters Frequencies!</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding-left: 200px;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 180px;
+        height: 100%;
+        background: #f4f4f4;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    #sidebar a {
+        display: block;
+        padding: 10px;
+        margin-bottom: 10px;
+        color: black;
+        text-decoration: none;
+    }
+    #sidebar a:hover {
+        background-color: #ddd;
+    }
+    .bold { font-weight: bold; }
+    .indent { margin-left: 20px; }
+    h1, h2, h3 {
+        color: #333;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    h4 {
+        color: #333;
+        margin-right: 30px;
+        margin-left: 30px;
+    }
+    p {
+        margin: 30px 30px;
+    }
+    
+    .image-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: nowrap;
+        margin: 0 auto;
+    }
+
+    .image-row figure {
+        margin: 10px; /* Adds space around each figure */
+        text-align: center; /* Centers the caption below the image */
+        width: 22%; /* Adjust the width as needed to fit your design */
+    }
+
+    .image-row figcaption {
+        text-align: center; /* Ensures text is centered */
+        display: block; /* May help with any inline vs block issues */
+        width: 100%; /* Full width to avoid any text wrapping */
+    }
+
+    .image-row img {
+        height: 400px; /* Set to the desired fixed height */
+        width: auto; /* Ensures the width adjusts to maintain the aspect ratio */
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* This creates a single column */
+        gap: 10px; /* Space between rows */
+    }
+
+    .image-grid img {
+        width: 100%; /* Images will take up the full width of the column */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .grid figure {
+        margin: 0; /* Removes default margin */
+        text-align: center; /* Centers the caption */
+    }
+
+    .grid img {
+        width: 100%;
+        display: block; /* Ensures there are no extra spaces below the image */
+    }
+
+    figcaption {
+        color: black; /* Sets the color of the caption text */
+        font-size: 1em;
+        font-weight: bold; /* Optional: makes text bold */
+        width: 100%;
+        top: 0;/* Adjusts the size of the caption text */
+    }
+        
+    /* .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+    .grid img {
+        width: 100%;
+    } */
+</style>
+</head>
+<body>
+<div id="sidebar">
+    <a href="#part1" class="bold">Part 1: Filters</a>
+    <a href="#part1.1" class="indent">Finite Difference</a>
+    <a href="#part1.2" class="indent">Derivative of Gaussian</a>
+    <a href="#part2" class="bold">Part 2: Frequencies</a>
+    <a href="#part2.1" class="indent">Image Sharpening</a>
+    <a href="#part2.2" class="indent">Hybrid Images</a>
+    <a href="#multi-res-blend" class="indent">Multi-res Blending</a>
+</div>
+
+<h1 id="main-title">Project 2: Fun with Filters Frequencies!</h1>
+<p>This project explores various image processing techniques that manipulate both spatial and frequency domains to achieve different visual effects and enhancements.</p>
+
+<h2 id="part1">Part 1: Fun with Filters</h2>
+<h3 id="part1.1">Finite Difference Operator</h3>
+<p>The image is first convolved with finite difference operators, <i>D<sub>x</sub></i> and <i>D<sub>y</sub></i>, to derive the gradients in the horizontal and vertical directions, respectively. The finite difference operators used for gradient calculation are defined as follows:</p>
+<p><i>D<sub>x</sub> = [1 -1]</i>, which computes the horizontal gradient, and <i>D<sub>y</sub> = [1, -1]<sup>T</sup></i>, which computes the vertical gradient.</p>
+<p> The gradient magnitude is computed using the equation:</p>
+<p><i>Gradient Magnitude = sqrt(G<sub>x</sub><sup>2</sup> + G<sub>y</sub><sup>2</sup>)</i></p>
+<p>This magnitude is then binarized using a threshold of 0.2 to highlight edges, producing a binary image that delineates edges clearly.</p>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/x_gradient.png" alt="Finite Difference Operator Result">
+        <figcaption>Gradient in the X direction</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/y_gradient.png" alt="Finite Difference Operator Result">
+        <figcaption>Gradient in the Y direction</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <img src="./media/part1_1.png" alt="Finite Difference Operator Result">
+</div>
+
+<h3 id="part1.2">Derivative of Gaussian Filter</h3>
+<p>In this section, to mitigate the noise associated with using just the finite difference operators, <i>D<sub>x</sub></i> and <i>D<sub>y</sub></i>, I used a Gaussian filter, <i>G</i>. 
+    This filter was applied to the original image to create a blurred version by convolving it with a Gaussian kernel. The kernel was generated using OpenCV's <code>cv2.getGaussianKernel()</code> function, 
+    which produces a 1D Gaussian kernel. The 2D Gaussian kernel required for image processing was then formed by taking the outer product of this 1D kernel with its transpose. Following the application of the Gaussian filter, 
+    I repeated the edge detection process by convolving the blurred image with <i>D<sub>x</sub></i> and <i>D<sub>y</sub></i>. The results were notably different from the initial approach. The edges detected in 
+    the blurred image were less noisy, for example the noises in the lower section foreground were removed after using Gaussian Filter. In addition, the edges detected are wider. 
+</p>
+
+<div class="image-row"> 
+    <img src="./media/part2_1_a.png" alt="Derivative of Gaussian Filter Result 1",style="height:800px">
+</div> 
+
+<p>I simplified the edge detection process by creating a Derivative of Gaussian (DoG) filter, which involves convolving a Gaussian filter with both <i>D<sub>x</sub></i> and <i>D<sub>y</sub></i>. 
+    This approach combines smoothing and differentiation into one step. After applying this composite filter to the image, the resulted edge image looks very similar to the previous edge image in which smoothing and edge
+    detection were done separately.</p>
+
+<div class="image-row">
+    <img src="./media/part2_1_b.png" alt="Derivative of Gaussian Filter Result 2",style="width:200px">
+</div>
+
+<h2 id="part2">Part 2: Fun with Frequencies</h2>
+<h3 id="part2.1">Image Sharpening</h3>
+
+<p>To sharpen an image, I started with a Gaussian filter to create a blurred version of the original image. This filter acted as a low pass filter, 
+    capturing only the low frequencies. Then, by subtracting this blurred version from the original, I isolated the high frequencies that define sharper details. 
+    Enhancing an image by adding these high frequencies back can make it appear sharper. This entire process is combined into a single convolution operation known 
+    as the unsharp mask filter. By convovling the unsharp mask filter with the image will result in a sharpened image. The sharpening filter equation used in the function is defined as:</p>
+<p><i>sharpen<sub>filter</sub> = (1 + α) * unit<sub>impulse</sub> - α * G</i></p>
+<p>where <i>α</i> is the sharpening factor, <i>unit<sub>impulse</sub></i> is the identity matrix with a value of 1 at its center, and <i>G</i> is the Gaussian kernel calculated as <i>a @ a<sup>T</sup></i>.</p>
+<p>The effect of this technique is demonstrated on several images:</p>
+
+<div class="image-grid">
+    <figure>
+        <figcaption class="top-caption">Taj Mahal, Alpha = 0.6</figcaption>
+        <img src="./media/sharpen_tajmahal.png" alt="Sharpened Taj Mahal">
+    </figure>
+    <figure>
+        <figcaption class="top-caption">Statue of Liberty, Alpha =1</figcaption>
+        <img src="./media/sharpened_statue_liberty.png" alt="Sharpened Statue of Liberty">
+    </figure>
+</div>
+
+<p>An image is blurred first with a Gaussian filter, then the sharpening filter is applied. While most edges were sharpened such as the shapes of the architecture and the mountains, the sharpening filter was not
+    able to restore the details that were smoothed out by the Gaussian filter such as the tourists at left corner, the textures of the walls of the architecture and also the curvatures from the trees and rocks on the mountains. </p>
+<div class="image-grid"></div>
+    <figure>
+        <figcaption class="top-caption">Machu Picchu, Alpha = 1</figcaption>
+        <img src="./media/sharpened_macchu_liberty.png" alt="Sharpened Machu Picchu" style="height:400px">
+    </figure>
+</div>
+
+<h3 id="part2.2">Hybrid Images</h3>
+<h4> Overview</h4>
+<p> Hybrid images are created using the approach described in the SIGGRAPH 2006 <a href="http://olivalab.mit.edu/publications/OlivaTorralb_Hybrid_Siggraph06.pdf">paper</a>
+    by Oliva, Torralba, and Schyns. To create hybrid images, I first apply Gaussian filters to two different images. One image is filtered to retain only its low-frequency components to capture its broader and more generalized features through smoothing. For the second image, on the opposite, the filtered result is subtracted from the original to isolate its high-frequency components, which include finer details and textures.
+</p>
+<p>These two processed images—one highlighting broad features and the other emphasizing details—are then combined. The result is a hybrid image that merges the smooth, generalized appearance of one image with the detailed texture of another. This combination allows for varied interpretations at different viewing distances, creating a visually engaging effect.
+</p>
+
+<h4> Fourier Analysis</h4>
+<p> Fourier analysis is used to transform the images into the frequency domain. The Fourier transform of an image decomposes it into its constituent frequencies, which are represented as a spectrum of amplitudes and phases. The frequency domain representation of an image is useful for analyzing and manipulating its content based on the spatial frequencies present. The magnitude of the Fourier transform indicates the strength of different frequencies which are displayed below.</p>
+<p>Lower frequencies substracted from the man’s image, and higher frequencies are filtered out from the cat’s image. These processed images show clear effects of filtering in their frequency domains: high frequencies are prominent in the cat image, and low frequencies dominate the man’s image. The hybrid image is formed by combining these high and low-frequency components, effectively merging the detailed textures of the cat with the general features of the man. 
+    This results in a composite image that blends both types of features, visible differently at various viewing distances.</p>
+
+<h4>Use of Color</h4>
+<p>Using color for both low and high-frequency components enhances the blending of hybrid images. Coloring high frequencies accentuates details and textures, making them more vivid and noticeable. For example, the nose and mouth area of the cat are more visible and detailed more the colored image was used. In contrast, applying color to low frequencies can help to set the background tone and also help to differentiate larger general regions through different colors. For example, by using color, I can better visual the man from a distance apart as his skin tone is very different from the background when the colored image is used.
+ </p>
+
+<div class="image-row">
+    <img src="./media/cat_frequency.png" alt="Hybrid Image 1" style="height:600px">
+    <img src="./media/derek_frequency.png" alt="Hybrid Image 2"style="height:600px">
+    <img src="./media/hybrid_freq.png" alt="Hybrid Image 3"style="height:600px">
+</div>
+
+<p> Blending Derek and the Cat</p>
+<div class="image-row"></div>
+    <img src="./media/nutmeg_cropped.png" alt="Hybrid Image 1" style="height:400px">
+    <img src="./media/derek_cropped.png" alt="Hybrid Image 2" style="height:400px">
+    <img src="./media/catman.png" alt="Hybrid Image 3" style="height:380px; margin-bottom: 10px;">
+</div>
+
+<p> Blending Tiger and Cat</p>
+<div class="image-row"></div>
+    <img src="./media/cat_cropped.png" alt="Hybrid Image 1" style="height:300px">
+    <img src="./media/tiger_cropped.png" alt="Hybrid Image 2" style="height:300px">
+    <img src="./media/tigercat.png" alt="Hybrid Image 3" style="height:285px;margin-bottom:10px;">
+</div>
+
+<p>For blending Miguel and Miguel in the Land of the Dead, the result is not optimal. I obtained the higher frequency details from the Miguel in the Land of the Dead and the lower frequency details from the normal Miguel. However, the Miguel in the Land of the Dead remains very visible even when viewed from a distance. This visibility issue can be attributed to the overlap in the frequency ranges of the two images. When high and low frequencies from two different images overlap substantially, it can prevent the low frequencies from sufficiently masking the high frequencies in the hybrid image. In addition, if the intensity or contrast of the high-frequency image is strong, it can dominate the blend, making it harder for the viewer's eye to focus on the smoother, broader features intended to be highlighted by the low-frequency components.
+</p>
+
+<p> Blending Miguel from COCO (Failed) </p>
+<div class="image-row"></div>
+    <img src="./media/miguel_person_cropped.png" alt="Hybrid Image 1" style="height:300px">
+    <img src="./media/miguel_skull_cropped.png" alt="Hybrid Image 2" style="height:300px">
+    <img src="./media/miguel_blend.png" alt="Hybrid Image 3" style="height:300px">
+</div>
+
+
+<h3 id="multi-res-blend">Multi-resolution Blending</h3>
+<p>The multiresolution Blending described in <a href="http://persci.mit.edu/pub_pdfs/spline83.pdf">paper</a> by Burt and Adelson is implemented in this section.</p>
+<p>I started by creating a Gaussian stack for each image, which involves repeatedly applying a Gaussian filter to the image multiple times, thus capturing various levels of detail from coarse to fine. Each level of the Gaussian stack represents the image at a different resolution, gradually becoming more blurred. Next, I constructed a Laplacian stack from the Gaussian stack, where each level is derived by subtracting the next, finer level from the current level. This process captures the difference between successive Gaussian blurs, isolating unique features at each scale. Finally, these Laplacian stacks are combined across corresponding levels to blend the two images with a mas , taking advantage of the distinct details preserved at each resolution, resulting in a seamlessly blended final image that incorporates elements from both source images. </p>
+
+<p>The formula for this blending at each level is: <code>hybrid = img_1_laplacian_stack[c][i] * mask_gaussian[i] + img_2_laplacian_stack[c][i] * (1 - mask_gaussian[i])</code> where <code>c</code> represents each color channel and <code>i</code> represents each level for the Gaussian/Laplacian stack.</p>
+<p>To seamlessly combine two images, I also applied a Gaussian filter to blur the mask used in the blending process. This approach involves creating a Gaussian stack for the mask, similar to the stacks created for the two input images. By blurring the mask, the transitions between the different image areas covered by the mask become smoother. This method helps in avoiding harsh, visible lines or abrupt transitions between the images. </p>
+<div>   
+    <figure>
+        <figcaption class="top-caption">The different levels of the Gaussian and Laplacian stacks for the two images and the mask are displayed:</figcaption>
+        <img src="./media/part2_3_1.png" alt="Multi-res Blending 1" style="height:800px">
+</div>
+
+<div>   
+    <figure>
+        <figcaption class="top-caption">The combined results of the mask and the Laplacisn stacks at each level are displayed:</figcaption>
+        <img src="./media/part2_3_2.png" alt="Multi-res Blending 1" style="height:800px">
+</div>
+
+<div>   
+    <figure>
+        <figcaption class="top-caption">Final result</figcaption>
+        <img src="./media/oraple.png" alt="Multi-res Blending 1" style="height:200px">
+</div>
+<h4> Polar Cat </p>
+<div>   
+    <figure>
+        <figcaption class="top-caption">Another illustration of the multi-resolution blending process</figcaption>
+        <img src="./media/polar_bear_stack.png" alt="Multi-res Blending 1" style="height:800px">
+</div>
+
+    <div class="grid">
+        <figure>
+            <img src="./media/polar_bear.jpg" alt="Rotated Funny Cat">
+            <figcaption>Polar Bear</figcaption>
+        </figure>
+        <figure>
+            <img src="./media/cat_rotate.png" alt="Balloon Fish Resized">
+            <figcaption>Cat</figcaption>
+        </figure>
+        <figure>
+            <img src="./media/mask_polar_cat.png" alt="Masked Cat Fish">
+            <figcaption>Mask</figcaption>
+        </figure>
+        <figure>
+            <img src="./media/polarcat.png" alt="Catfish">
+            <figcaption>Polar Cat</figcaption>
+        </figure>
+    </div>
+
+<h4> Stranger Things </h4>
+    <div class="grid">
+        <figure>
+            <img src="./media/stranger_things.jpg" alt="Rotated Funny Cat">
+            <figcaption>Mind Flayer from Stranger Things</figcaption>
+        </figure>
+        <figure>
+            <img src="./media/berkeley_2.jpg" alt="Balloon Fish Resized">
+            <figcaption>Campanille @ Berkeley </figcaption>
+        </figure>
+        <figure>
+            <img src="./media/mask_stranger_things_2.png" alt="Masked Cat Fish">
+            <figcaption>Mask</figcaption>
+        </figure>
+        <figure>
+            <img src="./media/hybrid_stranger_things_1.png" alt="Catfish">
+            <figcaption>Mind Flayer @ Berkeley </figcaption>
+        </figure>
+    </div>
+
+<h4> Catfish </p>
+<div class="grid">
+    <figure>
+        <img src="./media/rorated_funny_cat.jpg" alt="Rotated Funny Cat">
+        <figcaption>Cat</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/balloon_fish_resize.png" alt="Balloon Fish Resized">
+        <figcaption>Balloon Fish</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/mask_cat_fish.png" alt="Masked Cat Fish">
+        <figcaption>Mask</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/catfish.png" alt="Catfish">
+        <figcaption>Catfish</figcaption>
+    </figure>
+</div>
+
+<h4> Catowl </p>
+<div class="image-row">
+    <figure>
+        <img src="./media/owl_before.png" alt="Owl Before" style="height:500px">
+        <figcaption>Owl</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/cat_before.png" alt="Cat Before" style="height:500px">
+        <figcaption>Cat</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/mask_owlcat.png" alt="Masked Owl Cat" style="height:500px">
+        <figcaption>Mask</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/owlcat.png" alt="Owl Cat" style="height:500px">
+        <figcaption>Catowl</figcaption>
+    </figure>
+</div>
+
+<h4>Final Results</h4>
+<div class="image-row">
+</div>
+    <figure>
+        <figcaption class="top-caption">When campus life just got stranger</figcaption>
+        <img src="./media/hybrid_stranger_things_1.png" alt="Owl Before" style="height:500px;margin-top:10px;">
+    </figure>
+    <figure>
+        <figcaption class="top-caption">The coolest cat on ice</figcaption>
+        <img src="./media/polarcat.png" alt="Cat Before" style="height:500px;margin-top:10px;">
+    </figure>
+    <figure>
+        <figcaption class="top-caption">Don’t try to pet this kitty</figcaption>
+        <img src="./media/catfish.png" alt="Masked Owl Cat" style="height:500px;margin-top:10px;">
+    </figure>
+    <figure>
+        <img src="./media/owlcat.png" alt="Owl Cat" style="height:500px">
+    </figure>
+</div>
+<h4>Hope you enjoyed these fun images :)</h4>
+</body>
+</html>
+
