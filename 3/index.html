@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 3: Fun with Filters Frequencies!</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding-left: 200px;
+        margin-right: 80px;
+        margin-left: 80px;
+    }
+    #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 250px;
+        height: 100%;
+        background: #f4f4f4;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    #sidebar a {
+        display: block;
+        padding: 5px;
+        margin-bottom: 10px;
+        color: black;
+        text-decoration: none;
+    }
+    #sidebar a:hover {
+        background-color: #ddd;
+    }
+    .bold { font-weight: bold; }
+    .indent { margin-left: 20px; }
+    h1, h2, h3 {
+        color: #333;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    h4 {
+        color: #333;
+        margin-right: 30px;
+        margin-left: 30px;
+    }
+    p {
+        margin: 30px 30px;
+    }
+    
+    .image-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: nowrap;
+        margin: 0 auto;
+    }
+
+
+    .image-row figure {
+        margin: 10px; /* Adds space around each figure */
+        text-align: center; /* Centers the caption below the image */
+        width: 22%; /* Adjust the width as needed to fit your design */
+    }
+
+    .image-row figcaption {
+        text-align: center; /* Ensures text is centered */
+        display: block; /* May help with any inline vs block issues */
+        width: 100%; /* Full width to avoid any text wrapping */
+    }
+
+    .image-row img {
+        height: 400px; /* Set to the desired fixed height */
+        width: auto; /* Ensures the width adjusts to maintain the aspect ratio */
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* This creates a single column */
+        gap: 10px; /* Space between rows */
+    }
+
+    .image-grid img {
+        width: 100%; /* Images will take up the full width of the column */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .grid figure {
+        margin: 0; /* Removes default margin */
+        text-align: center; /* Centers the caption */
+    }
+
+    .grid img {
+        width: 100%;
+        display: block; /* Ensures there are no extra spaces below the image */
+    }
+
+    figcaption {
+        color: black; /* Sets the color of the caption text */
+        font-size: 1em;
+        font-weight: bold; /* Optional: makes text bold */
+        width: 100%;
+        top: 0;/* Adjusts the size of the caption text */
+    }
+        
+    /* .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+    .grid img {
+        width: 100%;
+    } */
+</style>
+</head>
+<body>
+<div id="sidebar">
+    <a href="#part1" class="bold">Part 1: Face Morphing</a>
+    <a href="#part1.1" class="indent">Defining Correspondences</a>
+    <a href="#part1.2" class="indent">Computing the "Mid-way Face"</a>
+    <a href="#part1.3" class="indent">The Morph Sequence</a>
+    <a href="#part2" class="bold">Part 2: The Mean Face</a>
+    <a href="#part2.1" class="indent">Computing the Average Face</a>
+    <a href="#part2.2" class="indent">Caricatures: Extrapolating from the mean</a>
+    <a href="#part3" class="bold">Part 3: Bells and Whistles</a>
+    <a href="#part3.1" class="indent">Change of Gender</a>
+    <a href="#part3.2" class="indent">Me in Time</a>
+    
+</div>
+
+<h1 id="main-title">Project 3: Face Morphing by Lisa (Qi) Hou</h1>
+<p>In this project, I played around with morphing and cross-dissolving to generate new images based on different faces and populations.</p>
+
+<h2 id="part1">Part 1: Face Morphing</h2>
+<h3 id="part1.1">Defining Correspondences</h3>
+<p>I decided to create a morphing sequence using pictures of myself (Left) and my sister Lin (Right), possibly to see what we would look like if we were identical twins.</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/qi.png" alt="Finite Difference Operator Result">
+    </figure>
+    <figure>   
+        <img src="./media/lin.png" alt="Finite Difference Operator Result">
+    </figure>
+</div>
+
+<p>I first manually defined 91 corresponding points on each image using <code>plt.ginput</code>, and then calculated the mid-point of the corresponding points for the two images to create a triangulation (using the Delaunay triangulation algorithm from the python <code>scipy</code> library) for morphing. 
+</p>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/triangulation_lisa.png" alt="Finite Difference Operator Result">
+    </figure>
+    <figure>   
+        <img src="./media/triangulation_lin.png" alt="Finite Difference Operator Result">
+    </figure>
+</div>
+
+
+<h3 id="part1.2">Computing the "Mid-way Face"</h3>
+<p>
+    The mid-way face was computed by first calculating the average shape from the keypoints of the two images. An affine transformation was applied for each triangle in the Delaunay triangulation to warp both faces into the average shape. This process involved the <code>computeAffine</code> function, which constructs a system of linear equations based on triangle coordinates and solves it using <code>np.linalg.solve</code> to determine the transformation parameters. The inverse transformation matrix was then used to map pixels from the original images to create the warped versions. While <code>scipy.interpolate.griddata</code> was initially considered for bilinear interpolation, it proved inefficient, and <code>scipy.ndimage.map_coordinates</code> was used instead for faster interpolation between the four nearest neighbors. Finally, the pixel values of the warped faces were averaged to produce the mid-way face.
+</p>
+
+
+<div class="image-row"> 
+    <img src="./media/mid-way-face.png" alt="Derivative of Gaussian Filter Result 1",style="height:500px">
+</div> 
+
+<h3 id="part1.3">The Morph Sequence</h3>
+<p>Lastly, a morphing sequence from my face to Lin’s was created with 45 intermediate images. The intermediate shape was created based on the warp_frac parameter and cross-dissolves the pixel values according to dissolve_frac. By varying these parameters across frames, I generated a continuous morph sequence from my face to Lin’s with both shape and appearance transitions smoothly.</p>
+
+<div class="image-row"> 
+    <img src="./media/morph_50.gif" alt="Derivative of Gaussian Filter Result 1",style="height:1000px">
+</div> 
+
+
+<h2 id="part2">Part 2: The Mean Face</h2>
+<h3 id="part2.1">Computing the Average Face</h3>
+
+<p>
+    Using the spatially normalized happy face data from the FEI Face Database, an average happy face was generated. The average shape was calculated by averaging the correspondence points across all faces. Each face was then warped to this average shape (examples shown below):
+</p>
+
+<figure>
+    <img src="./media/example.png" alt="Example of images warped into mean face",style="height:800px">
+    <figcaption>Examples of warping faces into the average shape</figcaption>
+</figure>
+
+<p>Then, final average happy face was obtained by averaging the pixel values of the warped faces. 
+    In addition, 1) My face warped into the average geometry, and 2) the average face warped into my geometry were also displayed. 
+</p>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/average_happy.png" alt="Hybrid Image 1" style="height:400px">
+        <figcaption>Average Face for Happy Expression</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/qi_to_happy.png" alt="Hybrid Image 2" style="height:400px">
+        <figcaption>My Face Warped into the Average</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/happy_to_qi.png" alt="Hybrid Image 3" style="height:400px">
+        <figcaption>The Average Warped into Mine</figcaption>
+    </figure>
+</div>
+
+
+<h3 id="part2.2"> Caricatures: Extrapolating from the mean</h3>
+<p>
+    A caricature was created by exaggerating the differences between the original face and the population mean. 
+    The keypoints were extrapolated by scaling the difference between the original keypoints and the mean, and the face was morphed to these new keypoints, 
+    with positive alpha exaggerating my feature, and negative alpha exaggerating the population mean feature.
+</p>
+
+
+<div class="image-row">
+    <img src="./media/alpha_-1.png" alt="Hybrid Image 1" style="height:300px">
+    <img src="./media/alpha-0.75.png" alt="Hybrid Image 2"style="height:300px">
+    <img src="./media/alpha-0.5.png" alt="Hybrid Image 3"style="height:300px">
+    <img src="./media/alpha-0.25.png" alt="Hybrid Image 3"style="height:300px">
+</div>
+
+<div class="image-row">
+    <img src="./media/alpha025.png" alt="Hybrid Image 1" style="height:300px">
+    <img src="./media/alpha-05.png" alt="Hybrid Image 2"style="height:300px">
+    <img src="./media/alpha075.png" alt="Hybrid Image 3"style="height:300px">
+    <img src="./media/alpha1.png" alt="Hybrid Image 3"style="height:300px">
+</div>
+
+<h2 id="part3">Part 3: Bells and Whistle</h2>
+<h3 id="part3.1">Change of Gender</h3>
+
+<p> I experimented with changing the gender of my face by morphing my face to match the average Chinese male face. First, the set of correspondences are first defined on both images. 
+    Then, I tried 1) only morphing the shape by warping my face to match shape of the average Chinese male face, 2) only morphing the appearance which is done by warping the average 
+    Chinese male face to match my face shape and then cross-dissolve the pixel values. 3) morphing both shape and appearance to obtain the final result. </p>
+
+<div class="image-row">
+    <img src="./media/Lisa_male.png" alt="Hybrid Image 3"style="height:400px">
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/qi_male_shape.png" alt="Hybrid Image 1" style="height:400px">
+        <figcaption>Shape Only</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/qi_male_apperance.png" alt="Hybrid Image 2" style="height:400px">
+        <figcaption>Appearance Only</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/qi_male_shape_appearance.png" alt="Hybrid Image 3" style="height:400px">
+        <figcaption>Shape and Appearance</figcaption>
+    </figure>
+</div>
+
+
+<h3 id="part3.2">Me in Time</h3>
+<p>I also created a series of transformation from my childhood photos to now by defining the same set of correspondence points for each photo and warping and cross-dissolve between the adjacent ones:</p>
+<iframe width="869" height="515" src="https://www.youtube.com/embed/4rq73iL6m2A?si=JQ1gBhWz48DXx-kA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</body>
+</html>
