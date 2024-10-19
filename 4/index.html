@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+        
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<title>Project 4: Imaging Warping and Morphing</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding-left: 50px;
+        margin-right: 80px;
+        margin-left: 80px;
+    }
+    .bold { font-weight: bold; }
+    .indent { margin-left: 20px; }
+    h1, h2, h3 {
+        color: #333;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    h4 {
+        color: #333;
+        margin-right: 30px;
+        margin-left: 30px;
+    }
+    p {
+        margin: 30px 30px;
+    }
+    
+    .image-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: nowrap;
+        margin: 0 auto;
+    }
+
+
+    .image-row figure {
+        margin: 5px; /* Adds space around each figure */
+        text-align: center; /* Centers the caption below the image */
+        width: 22%; /* Adjust the width as needed to fit your design */
+    }
+
+    .image-row figcaption {
+        text-align: center; /* Ensures text is centered */
+        display: block; /* May help with any inline vs block issues */
+        width: 100%; /* Full width to avoid any text wrapping */
+    }
+
+    .image-row img {
+        height: 400px; /* Set to the desired fixed height */
+        width: auto; /* Ensures the width adjusts to maintain the aspect ratio */
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* This creates a single column */
+        gap: 10px; /* Space between rows */
+    }
+
+    .image-grid img {
+        width: 100%; /* Images will take up the full width of the column */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .grid figure {
+        margin: 0; /* Removes default margin */
+        text-align: center; /* Centers the caption */
+    }
+
+    .grid img {
+        width: 100%;
+        display: block; /* Ensures there are no extra spaces below the image */
+    }
+
+        
+    /* .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+    .grid img {
+        width: 100%;
+    } */
+</style>
+</head>
+<body>
+
+
+<h1 id="main-title">Project 4: Imaging Morphing and Warping by Lisa (Qi) Hou</h1>
+
+<h2 id="part1">Part 4A: Warping and Mosaic</h2>
+<h3 id="part1.1">Recovering Homographies</h3>
+
+<p>First I create the function computeH() to recover the homography matrix between image 1 and image 2. </p>
+
+<p>
+The homography matrix \( H \) is given as:
+</p>
+
+<p>
+$$
+H = \begin{bmatrix}
+a & b & c \\
+d & e & f \\
+g & h & i
+\end{bmatrix}
+$$
+</p>
+
+
+<p>
+The transformation equation is:
+</p>
+
+<p>
+$$
+\begin{bmatrix}
+wx' \\
+wy' \\
+w
+\end{bmatrix}
+=
+\begin{bmatrix}
+a & b & c \\
+d & e & f \\
+g & h & i
+\end{bmatrix}
+\begin{bmatrix}
+x \\
+y \\
+1
+\end{bmatrix}
+$$
+</p>
+
+<p>This expands to two equations for each point correspondence \((x, y) \rightarrow (x', y')\):</p>
+
+<p>
+$$
+x' = \frac{ax + by + c}{gx + hy + 1}
+$$
+</p>
+
+<p>
+$$
+y' = \frac{dx + ey + f}{gx + hy + 1}
+$$
+</p>
+
+
+<p>
+After some rearraning, the equation for solving the homography matrix can be written as:
+</p>
+    
+<p>
+$$
+\begin{bmatrix}
+x & y & 1 & 0 & 0 & 0 & -xx' & -yx' \\
+0 & 0 & 0 & x & y & 1 & -xy' & -yy'
+\end{bmatrix}
+\begin{bmatrix}
+a \\
+b \\
+c \\
+d \\
+e \\
+f \\
+g \\
+h
+\end{bmatrix}
+=
+\begin{bmatrix}
+x' \\
+y'
+\end{bmatrix}
+$$
+</p>
+
+<p>When there are more than 4 correspondences, we then use the least square method to find the optimal solution.</p>
+
+
+
+<h3 id="part1.2">Image Rectification</h3>
+<p>To complete image rectification, I selected the corner of a object in the image that I want to performn rectification, then I manually defined the target rectangular corner coordinate. Then, I found the homography matrix between the two images using these correspondences. Then, I warped the first image to the rectifified perspective using the homography matrix. 
+</p>
+</p>
+
+<p>I rectified object appeared in some famous artworks:</p>
+<p> 1. Floor pattern in the painting: Saint Jerome in His Study by Albrecht Dürer </p>
+<div class="image-row">
+    <figure>
+        <img src="./media/saintjerome_uncropped.jpg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/saintjerome.jpg" alt="Hybrid Image 2" style="height:300px">
+        <figcaption>Cropped Painting to focus on the floor</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/saintjerome_wraped.jpg" alt="Hybrid Image 3" style="height:300px">
+        <figcaption>Rectified Floor Pattern</figcaption>
+    </figure>
+</div>
+
+<p> 2. A painting in: Vedute di Roma moderna Giclee by Giovanni Paolo Panini </p>
+<div class="image-row">
+    <figure>
+        <img src="./media/gallery.jpg" alt="Hybrid Image 1" style="height:300px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/gallerycropped.jpg" alt="Hybrid Image 2" style="height:300px">
+        <figcaption>Cropped image to focus on the painting</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/gallery_wraped.jpg" alt="Hybrid Image 3" style="height:300px">
+        <figcaption>Rectified Painting</figcaption>
+    </figure>
+
+</div>
+
+<p> 3. Sheet music in The Dance Class by Edgar Degas </p>
+<div class="image-row">
+    <figure>
+        <img src="./media/thedanceclassii-degas.jpeg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/thedanceclassii-degas_cropped.jpeg" alt="Hybrid Image 2" style="height:300px">
+        <figcaption>Cropped to focus on the sheet music</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/degas_wraped.jpg" alt="Hybrid Image 3" style="height:300px">
+        <figcaption>Rectified</figcaption>
+    </figure>
+</div>
+
+<h2 id="part2">Mosaic</h2>
+<p>
+
+To create a mosaic, I first select 10 corresponding points in both images and use them to compute the Homography matrix, which aligns image 1 to image 2’s perspective.
+
+After warping image 1 using the Homography, I blend the two images using a Gaussian-blurred alpha mask. The distance transform determines each pixel’s proximity to the boundaries of both images, and an alpha mask is created based on these distances. 
+The mask is then smoothed using a Gaussian filter, ensuring a gradual transition between the images.
+Finally, the images are combined using a linear blend weighted by the alpha mask to produce a smooth mosaic.
+</p>
+
+<p> Example 1</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/IMG_7161.jpeg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+
+    <figure>
+        <img src="./media/IMG_7160.jpeg" alt="Hybrid Image 2" style="height:400px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_1.jpg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+</div>
+
+<p> Example 2</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/IMG_7153.jpeg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+
+    <figure>
+        <img src="./media/IMG_7154.jpeg" alt="Hybrid Image 2" style="height:400px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_3.jpg" alt="Hybrid Image 1" style="height:600px">
+    </figure>
+</div>
+
+<p> Example 3</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/IMG_7158.jpeg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+
+    <figure>
+        <img src="./media/IMG_7159.jpeg" alt="Hybrid Image 2" style="height:400px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_5.jpg" alt="Hybrid Image 1" style="height:500px">
+    </figure>
+</div>
+
+<p> Example 4</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/IMG_7189.jpg" alt="Hybrid Image 1" style="height:400px">
+    </figure>
+
+    <figure>
+        <img src="./media/IMG_7188.jpg" alt="Hybrid Image 2" style="height:400px">
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_6.jpg" alt="Hybrid Image 1" style="height:500px">
+    </figure>
+</div>
+
+</body>
+</html>
