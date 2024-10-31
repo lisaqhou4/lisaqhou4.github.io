@@ -334,5 +334,132 @@ Finally, the images are combined using a linear blend weighted by the alpha mask
     </figure>
 </div>
 
+<h2 id="part1">Part 4B: Feature Matching for Auto-Stitching</h2>
+<h3 id="part1.1">Corner Detection</h3>
+<h4 id="part1.1.1">Harris Corner Detection</h4>
+<p>To begin, we locate potential interest points using the Harris Corner Detection algorithm. The Harris detector identifies corners by examining local changes in image intensity around each pixel, aiming to find points where intensity changes significantly in multiple directions. 
+    Such points are typically located at the intersection of two edges, making them ideal for feature matching. The function get_harris_corners is used to detect Harris corners in a grayscale image, returning both the Harris response values for each pixel and the coordinates of the detected corners.
+</p>
+
+<h4 id="part1.1.2">Adaptive Non-Maximal Suppression</h4>
+<p>Since the algorithm initially detects too many interest points, I employed the Adaptive Non-Maximal Suppression (ANMS) algorithm to eliminate clustered points and retain only the most significant, evenly distributed interest points. In ANMS, I iterated over all interest points and calculated the suppression radius for each point to its nearest stronger neighboring corner. After the iteration, the interest points were sorted by their suppression radius from largest to smallest, and the top n (where n = 500) points were selected as the final set of interest points.
+   The purpose of ANMS is to retain interest points that are strong and have no significantly stronger neighbors nearby, resulting in a large suppression radius. These points are not clustered near other strong corners. In contrast, weaker corners near stronger neighbors have a small suppression radius and are thus discarded.
+</p>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/harris_corners_orig.png" alt="Harris Corners" style="height:500px">
+        <figcaption>Harris Corners</figcaption>
+    </figure>
+    <figure>
+        <img src="./media/harris_corners_ANMS.png" alt="Harris Corners" style="height:500px">
+        <figcaption>Harris Corners After ANMS</figcaption>
+    </figure>
+</div>
+
+<h3 id="part1.2">Feature Descriptor</h3>
+<p>After identifying the interest points, I extracted an axis-aligned feature descriptor for each point by taking a 40x40 patch centered on the interest point and downsampling it to form an 8x8 descriptor patch. Using the rescale function from the skimage library, the 40x40 patch is automatically sampled to an 8x8 output with even spacing (s = 5), applying Gaussian blur to reduce potential aliasing. After sampling, each descriptor is normalized to ensure invariance to affine intensity changes.
+</p>
+
+<h3 id="part1.3">Feature Matching</h3>
+<p>To match feature descriptors between two images, I identified the best and second-best matches from the target image for each feature descriptor in the source image using L2-distance. Then, I applied Lowe's ratio test, comparing the ratio of the nearest neighbor distance to the second-nearest neighbor distance. Matches with a Lowe's ratio < 0.5 were retained as valid matches. This ratio test helps filter out poor matches by ensuring that the best match is significantly closer than the second-best match, thereby improving the robustness of the matching process.
+</p>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/matched_feature_points_07.png" alt="Harris Corners" style="height:400px">
+        <figcaption></figcaption>
+    </figure>
+</div>
+
+<p>The sets of matched feature points using threshold=0.5 are more accurate than with threshold=0.7.</p>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/matched_feature_points_05.png" alt="Harris Corners" style="height:400px">
+        <figcaption></figcaption>
+    </figure>
+</div>
+
+
+
+<h3 id="part1.4">RANSAC</h3>
+<p>To find the optimal homography matrix that aligns the source image to the target image, the RANSAC algorithm follows these steps:
+    <ol>
+        <li>Randomly select 4 pairs of matched points from the valid matches.</li>
+        <li>Compute the homography matrix H using these 4 pairs of points.</li>
+        <li>Apply H to all points in the source image to find the transformed points.</li>
+        <li>Calculate the Euclidean distance between the transformed points and the target points.</li>
+        <li>Count the number of inliers (points within a threshold distance of the target points (threshold=0.5)).</li>
+        <li>Repeat steps 1-5 for 1000 iterations.</li>
+        <li>Choose the largest sets of inliers and calculate the optimal homography matrix based on these sets of corresponding points.</li>
+    </ol>
+</p>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/RANSAC_matched_feature_points.png" alt="Harris Corners" style="height:400px">
+        <figcaption></figcaption>
+    </figure>
+</div>
+<p> The largest sets of inliers are 7 for this example, and they are all accurately matched to the target interest points. </p>
+<h3 id="part1.4">Auto-Stitching</h3>
+<p>After obtaining the homography matrix, the mosaic from the two images are produced following the same steps from part A.
+</p>
+
+<p> Example 1</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_1.jpg" alt="Hybrid Image 1" style="height:500px">
+        <figcaption>Manually Aligned</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/building.jpg"  alt="Hybrid Image 2" style="height:500px">
+        <figcaption>Auto-Stitching</figcaption>
+    </figure>
+</div>
+
+<p> Example 2</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_3.jpg" alt="Hybrid Image 1" style="height:500px">
+        <figcaption>Manually Aligned</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/mainstack_vertical.jpg"  alt="Hybrid Image 2" style="height:500px">
+        <figcaption>Auto-Stitching</figcaption>
+    </figure>
+</div>
+
+<p> Example 3</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_5.jpg" alt="Hybrid Image 1" style="height:500px">
+        <figcaption>Manually Aligned</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/mainstack_horizontal.jpg"  alt="Hybrid Image 2" style="height:500px">
+        <figcaption>Auto-Stitching</figcaption>
+    </figure>
+</div>
+
+<p> Example 4</p>
+<div class="image-row">
+    <figure>
+        <img src="./media/blended_6.jpg" alt="Hybrid Image 1" style="height:500px">
+        <figcaption>Manually Aligned</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/room.jpg"  alt="Hybrid Image 2" style="height:500px">
+        <figcaption>Auto-Stitching</figcaption>
+    </figure>
+</div>
+<p>I learned how robust ANMS and RANSAC are in identifying strong interest points and accurately matching corresponding points for calculating the homography matrix. ANMS efficiently filters and distributes key points, while RANSAC reliably handles outliers to find the best transformations, making these algorithms powerful tools for precise and resilient feature matching in computer vision.
+
+</p>
 </body>
 </html>
