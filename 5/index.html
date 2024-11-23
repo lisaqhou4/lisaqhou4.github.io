@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 3: Fun with Filters Frequencies!</title>
+<style>
+    body {
+        font-family: Calibri, sans-serif;
+        /* padding-left: 200px; */
+        margin-right: 80px;
+        margin-left: 80px;
+    }
+    #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 250px;
+        height: 100%;
+        background: #f4f4f4;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    #sidebar a {
+        display: block;
+        padding: 5px;
+        margin-bottom: 10px;
+        color: black;
+        text-decoration: none;
+    }
+    #sidebar a:hover {
+        background-color: #ddd;
+    }
+    .bold { font-weight: bold; }
+    .indent { margin-left: 20px; }
+    h1, h2, h3 {
+        color: #333;
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    h4 {
+        color: #333;
+        margin-right: 30px;
+        margin-left: 30px;
+    }
+    p {
+        margin: 30px 30px;
+    }
+    
+    .image-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: nowrap;
+        margin: 0 auto;
+    }
+
+
+    .image-row figure {
+        margin: 10px; /* Adds space around each figure */
+        text-align: center; /* Centers the caption below the image */
+        width: 22%; /* Adjust the width as needed to fit your design */
+    }
+
+    .image-row figcaption {
+        text-align: center; /* Ensures text is centered */
+        display: block; /* May help with any inline vs block issues */
+        width: 100%; /* Full width to avoid any text wrapping */
+    }
+
+    .image-row img {
+        height: 400px; /* Set to the desired fixed height */
+        width: auto; /* Ensures the width adjusts to maintain the aspect ratio */
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* This creates a single column */
+        gap: 10px; /* Space between rows */
+    }
+
+    .image-grid img {
+        width: 100%; /* Images will take up the full width of the column */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .grid figure {
+        margin: 0; /* Removes default margin */
+        text-align: center; /* Centers the caption */
+    }
+
+    .grid img {
+        width: 100%;
+        display: block; /* Ensures there are no extra spaces below the image */
+    }
+
+    figcaption {
+        color: black; /* Sets the color of the caption text */
+        font-size: 1em;
+        width: 100%;
+        white-space: nowrap;
+        top: 0;/* Adjusts the size of the caption text */
+    }
+
+</style>
+</head>
+
+<h1 id="main-title">Project 5: Diffusion Models by Lisa (Qi) Hou</h1>
+<p>In this project, I played around with morphing and cross-dissolving to generate new images based on different faces and populations.</p>
+
+<h2 id="partA">Part A: Fun with Diffusion Models</h2>
+<h3 id="partA-1">Part 1 Sampling Loops</h3>
+
+<h4 id="partA-1-1">Diffusion Model Overview</h4>
+
+
+<p>
+    Starting with a clean image <em>x<sub>0</sub></em>, we iteratively add noise to generate progressively noisier images <em>x<sub>t</sub></em>, until we reach pure noise at timestep <em>t = T</em>. At <em>t = 0</em>, we have a clean image, and for larger <em>t</em>, the image becomes noisier.
+</p>
+<p>
+    A diffusion model reverses this process by denoising the noisy image <em>x<sub>t</sub></em> at each timestep. Using the predicted noise, we can either remove all noise to estimate <em>x<sub>0</sub></em> or partially denoise it to get <em>x<sub>t-1</sub></em>. The process continues iteratively until we obtain a clean image <em>x<sub>0</sub></em>.
+</p>
+<p>
+    To generate new images, the process begins with pure noise sampled from a Gaussian distribution at timestep <em>T</em>, denoted as <em>x<sub>T</sub></em>. By progressively denoising, we generate a clean image.
+</p>
+<p>
+    The amount of noise added at each step is determined by noise coefficients <em>&alpha;<sub>t</sub></em>, predefined during training.
+</p>
+
+<h4>1.1 Implementing the Forward Process</h2>
+<p>
+    The forward process adds noise to a clean image <em>x<sub>0</sub></em>. The process is defined by:
+</p>
+<p>
+    <em>q(x<sub>t</sub>|x<sub>0</sub>) = N(x<sub>t</sub>; &radic;&alpha;&#773;<sub>t</sub>x<sub>0</sub>, (1 - &alpha;&#773;<sub>t</sub>)I)</em>
+</p>
+<p>
+    This is equivalent to:
+</p>
+<p>
+    <em>x<sub>t</sub> = &radic;&alpha;&#773;<sub>t</sub>x<sub>0</sub> + &radic;(1 - &alpha;&#773;<sub>t</sub>)&epsilon;</em>, where <em>&epsilon; ~ N(0, 1)</em>.
+</p>
+<p>
+    The forward process involves scaling <em>x<sub>0</sub></em> by <em>&radic;&alpha;&#773;<sub>t</sub></em> and adding Gaussian noise scaled by <em>&radic;(1 - &alpha;&#773;<sub>t</sub>)</em>. 
+</p>
+<p>
+    To implement this, use the <code>alphas_cumprod</code> variable, which contains <em>&alpha;&#773;<sub>t</sub></em> values for all <em>t</em> in the range [0, 999]. Remember:
+</p>
+<ul>
+    <li><em>t = 0</em>: clean image, <em>&alpha;&#773;<sub>t</sub> &rarr; 1</em>.</li>
+    <li><em>t</em> close to <em>T</em>: noisier image, <em>&alpha;&#773;<sub>t</sub> &rarr; 0</em>.</li>
+</ul>
+<p>
+    The forward process is tested using a sample image resized to 64x64. For timesteps <em>t</em> in {250, 500, 750}, the results are displayed.
+</p>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/ground_truth.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Ground Truth</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t250.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=250</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t500.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=500</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t750.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>t=750</figcaption>
+    </figure>
+</div>
+
+<h4 id="part1.1.1">1.2 Classical Denoising</h4>
+<p>The noisy images are denoised using gaussian blur filter:</p>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_1_t250.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=250</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t500.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=500</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t750.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>t=750</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_2_t250.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Gaussian Blur Denoising  t=250</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_2_t500.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Gaussian Blur Denoising  t=500</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_2_t750.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>Gaussian Blur Denoising t=750</figcaption>
+    </figure>
+</div>
+
+<h4 id="part1.1.1">1.3 One-Step Denoising with Diffusion Model</h4>
+<p>The noisy images are denoised using a pretrained diffusion model with the prompt "a high quality photo":</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_1_t250.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=250</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t500.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=500</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_1_t750.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>t=750</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_3_t250.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=250 One-step Denoised</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_3_t500.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=500 One-step Denoised</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_3_t750.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>t=750 One-step Denoised</figcaption>
+    </figure>
+</div>
+
+
+<h4 id="part1.1.1">1.4 Iteartive Denoising with Diffusion Model</h4>
+
+<p>
+    Diffusion models are designed to denoise iteratively. To achieve this, I could start with noise <em>x<sub>1000</sub></em> at timestep <em>T = 1000</em>, denoise step-by-step until reaching <em>x<sub>0</sub></em>. However, this would require running the model 1000 times, which is computationally expensive.
+</p>
+<p>
+    We can speed up the process by skipping steps. 
+</p>
+
+<p>
+    To skip steps, I created a new list of timesteps called <code>strided_timesteps</code>. This list corresponds to the noisiest image at the largest timestep, with <code>strided_timesteps[-1]</code> representing a clean image. A stride of 30 works well, so I used it to construct the list.
+</p>
+<p>
+    On the <em>i</em><sup>th</sup> denoising step, I used <em>t = strided_timesteps[i]</em> and denoised to <em>t' = strided_timesteps[i+1]</em>. The formula for this is:
+</p>
+<figure>
+    <img src="./media/equation_iterative_denoised.png" alt="Hybrid Image 1",  style="height:70px">
+</figure>
+<p>Where:</p>
+<ul>
+    <li><em>x<sub>t</sub></em>: Image at timestep <em>t</em>.</li>
+    <li><em>x<sub>t'</sub></em>: Noisy image at timestep <em>t'</em> (less noisy).</li>
+    <li><em>&alpha;<sub>t</sub></em>: Defined by <code>alphas_cumprod</code>.</li>
+    <li><em>&beta;<sub>t</sub> = 1 - &alpha;<sub>t</sub></em>.</li>
+    <li><em>x<sub>0</sub></em>: Current estimate of the clean image</li>
+</ul>
+
+<p>The results comparison are displayed:</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_4_90.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=90</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_240.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=240</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_390.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>t=390</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_540.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=540</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_690.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>t=690</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/ground_truth.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Original</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_iterative.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Iterative Denoised</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_onestep.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>One step</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_4_gaussian.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Gaussian Blurred</figcaption>
+    </figure>
+</div>
+
+<h4> 1.5 Diffusion Model Sampling</h4>
+<p> Using the same iterative denoise function, I generated 5 images from scratch by setting i_strat to 0, passing in random noise with the prompt "a hight quality photo":</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_5_5.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_5_1.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_5_2.png" alt="Finite Difference Operator Result" , style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_5_3.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_5_4.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+
+</div>
+
+<h4> 1.6 Classifier-Free Guidance</h4>
+<p> I implemented Classifier-Free Guidance which could improve the generaed image quality. In CGF, a conditional and unconditional noise estimate are computed, and the final noise estimate 
+    is a weighted sum of the two. The weights are determined by the conditional noise estimate using this equation, where &epsilon;<sub>u</sub> is the unconditional noise estimate, &epsilon;<sub>c</sub> is the conditional noise estimate, and &epsilon; is the final noise estimate:
+</p>
+
+<figure>
+    <img src="./media/equation_cfg.png" alt="Hybrid Image 1",  style="height:50px">
+</figure>
+
+<p> where &gamma; controls the strength of CFG. When &gamma; > 1, the generated images have high quality.</p>
+<p>The final noise estimate is used to denoise the image. The results are displayed below:</p>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_6_1.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_6_2.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_6_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_6_4.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+    <figure>   
+        <img src="./media/1_6_5.png" alt="Finite Difference Operator Result", style="height:100px">
+    </figure>
+</div>
+
+<h3 id="part1.2">Part 2: Image-to-Image Translation</h3>
+<h4 id="part1.2.1"> 1.7 SDEdit</h4>
+<p>I started with some original test images, and noise it at different strating index, and force it back onto the image manifold without any conditioning.</p>
+
+<div class="image-row">
+    <caption>1.</caption>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_1_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_1_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_1_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_1_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_1_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_1_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure>    
+    <figure>   
+        <img src="./media/ground_truth.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Original Image</figcaption>
+    </figure> 
+</div>
+
+<div class="image-row">
+    <caption>2.</caption>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_2_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_2_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_2_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_2_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_2_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_2_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure>    
+    <figure>   
+        <img src="./media/test_tree.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Original Image</figcaption>
+    </figure> 
+</div>
+
+<div class="image-row">
+    <caption>3.</caption>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_3_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_3_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_3_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_3_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_3_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_pre/1_7_3_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure>    
+    <figure>   
+        <img src="./media/test_owl.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>Original Image</figcaption>
+    </figure> 
+</div>
+
+<h4 id="part1.2.1"> 1.7.1 Hand Drawn and Web Images</h4>
+<p> I also tested the SDEdit on hand drawn and web images:</p>
+
+
+
+<div class="image-row">
+    <caption>1.</caption>
+    <figure>   
+        <img src="./media/web_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/web_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/web_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/web_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>    
+    </figure>
+    <figure>   
+        <img src="./media/web_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>   
+    </figure>
+    <figure>   
+        <img src="./media/web_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure> 
+</div>
+
+
+<div class="image-row">
+    <caption>2.</caption>
+    <figure>   
+        <img src="./media/flower_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/flower_7.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/flower_10.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 19</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/flower_13.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 13</figcaption>    
+    </figure>
+    <figure>   
+        <img src="./media/flower_15.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 15</figcaption>   
+    </figure>
+    <figure>   
+        <img src="./media/flower_17.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 17</figcaption>
+    </figure> 
+    <figure>   
+        <img src="./media/flower_20.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure> 
+</div>
+
+
+<div class="image-row">
+    <caption>3.</caption>
+    <figure>   
+        <img src="./media/dog_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/dog_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/dog_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/dog_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>    
+    </figure>
+    <figure>   
+        <img src="./media/dog_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>   
+    </figure>
+    <figure>   
+        <img src="./media/dog_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure> 
+</div>
+
+<h4 id="part1.2.1"> 1.7.2 Inpainting</h4>
+<p>
+    For this part, I implemented inpainting in which at each timestep, the generated image <em>x<sub>t</sub></em> is modified so that the regions specified by <em>m = 0</em> match the original image <em>x<sub>orig</sub></em>. This adjustment ensures consistency with the original image outside the masked region. The formula for this adjustment is:
+</p>
+<p style="text-align: center;">
+    <em>x<sub>t</sub> &larr; m &circ; x<sub>t</sub> + (1 - m) &circ; forward(x<sub>orig</sub>, t)</em>
+</p>
+<p>
+    This means that everything inside the mask (where <em>m</em> is 1) is filled with new content, while the areas outside the mask (where <em>m</em> is 0) remain unchanged, incorporating the appropriate amount of noise for timestep <em>t</em>.
+</p>
+<p>
+    The results are displayed below:
+</p>
+
+<div class="image-row">
+    <caption>1.</caption>
+    <figure>   
+        <img src="./media/ground_truth.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>Original</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/mask_1.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>mask</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/to_replace_1.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>Hole to fill</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/inpainting_1.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>inpainting result</figcaption>
+    </figure>
+</div>
+
+
+
+<div class="image-row">
+    <caption>2.</caption>
+    <figure>   
+        <img src="./media/duck.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>Original</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/mask_2.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>mask</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/replace_2.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>Hole to fill</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/inpainting_2.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>inpainting result</figcaption>
+    </figure>
+</div>
+
+
+<div class="image-row">
+    <caption>3.</caption>
+    <figure>   
+        <img src="./media/castle.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>Original</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/mask_3.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>mask</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/replace_3.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>Hole to fill</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/inpainting_3.png" alt="Finite Difference Operator Result", style="height:150px">
+        <figcaption>inpainting result</figcaption>
+    </figure>
+</div>
+
+<h4 id="part1.2.1"> 1.7.3 Text-Conditional Image-to-image Translation</h4>
+<p>I implemented SDEdit with a different prompt for this part:</p>
+
+<p>1. Prompt "a rocket ship"</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_7_part3_1_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_1_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_1_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_1_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>    
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_1_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>   
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_1_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure> 
+
+    <figure>   
+        <img src="./media/ground_truth.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>original</figcaption>
+    </figure> 
+</div>
+
+<p>2. Prompt "a broccoli"</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_7_part3_2_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_2_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_2_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_2_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>    
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_2_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>   
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_2_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure> 
+
+    <figure>   
+        <img src="./media/test_tree.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>original</figcaption>
+    </figure> 
+</div>
+
+<p>3. Prompt "a ninja"</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/1_7_part3_3_1.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 1</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_3_2.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 3</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_3_3.png" alt="Finite Difference Operator Result" , style="height:100px">
+        <figcaption>i_start = 5</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_3_4.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 7</figcaption>    
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_3_5.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 10</figcaption>   
+    </figure>
+    <figure>   
+        <img src="./media/1_7_part3_3_6.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>i_start = 20</figcaption>
+    </figure> 
+
+    <figure>   
+        <img src="./media/test_owl.png" alt="Finite Difference Operator Result", style="height:100px">
+        <figcaption>original</figcaption>
+    </figure> 
+</div>
+
+<h3 id="part1.2.1"> Part 3 Visual Anagram</h3>
+<p> Our goal is to generate an image that appears as prompt1 but, when flipped upside down, transforms into the image of a different prompt.</p>
+<p>I followed algorithm:</p>
+<pre>
+    ε₁ = UNet(x_t, t, p₁)
+    ε₂ = flip(UNet(flip(x_t), t, p₂))
+    ε = (ε₁ + ε₂) / 2
+</pre>
+
+<p> The results are displayed below:</p>
+<div class="image-row">
+    <figure>   
+        <img src="./media/visual_anagram_1_up.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>An Oil Painting of an Old Man</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/visual_anagram_1_down.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>An Oil Painting of People around a Campfire</figcaption>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/visual_anagram_2_up.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>A lithograph of waterfalls</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/visual_anagram_2_down.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>A lithograph of a skull</figcaption>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/visual_anagram_3_up.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>An ink drawing of a dog</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/visual_anagram_3_down.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>An ink drawing of an elephant</figcaption>
+</div>
+
+<h3 id="part1.2.1"> Part 4 Hybrid Images</h4>
+    <p>To generate hybrid images using a diffusion model, we will follow a similar approach as described earlier. Specifically, we will estimate the noise using two different text prompts and combine the results to create a composite noise estimate, <code>ε</code>. The composite estimate will merge the low-frequency components from one noise estimate with the high-frequency components from the other. The algorithm is as follows:</p>
+    <pre>
+        ε₁ = UNet(x_t, t, p₁)
+        ε₂ = UNet(x_t, t, p₂)
+        ε = f_lowpass(ε₁) + f_highpass(ε₂)
+    </pre>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/hybrid_1.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>a lithograph of waterfalls</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/hybrid_1.png" alt="Finite Difference Operator Result", style="height:60px">
+        <figcaption>a lithograph of a skull</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/hybrid_2.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>An oil painting of a forest</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/hybrid_2.png" alt="Finite Difference Operator Result", style="height:60px">
+        <figcaption>An oil painting of a skull</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/hybrid_3.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>A photo of a plant</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/hybrid_3.png" alt="Finite Difference Operator Result", style="height:60px">
+        <figcaption>A lithograph of a dog</figcaption>
+    </figure>
+</div>
+
+<div class="image-row">
+    <figure>   
+        <img src="./media/hybrid_4.png" alt="Finite Difference Operator Result", style="height:350px">
+        <figcaption>A photo of a plant</figcaption>
+    </figure>
+    <figure>   
+        <img src="./media/hybrid_4.png" alt="Finite Difference Operator Result", style="height:60px">
+        <figcaption>A lithograph of a dog</figcaption>
+    </figure>
+</div>
+
+<h2>Part B Diffusion Model</h2>
+<h3 id="part1.2.1"> Part 1: Training a single step Unet</h3>
+<p>A unconditioned U-Net is implemented to denoise image:</p>
+
+<figure>
+    <img src="./media/unconditioned_unet.png" alt="Hybrid Image 1", style="height:500px">
+</figure>
+
+<p>Building on the objective described earlier, our goal is to solve the denoising problem: given a noisy image <code>z</code>, train a denoiser <code>D<sub>θ</sub></code> such that it reconstructs a clean image <code>x</code>. To achieve this, we optimize the following L2 loss function:</p>
+<p style="text-align: center;">
+    <code>L = 𝔼<sub>z,x</sub>[‖D<sub>θ</sub>(z) - x‖²]</code>
+</p>
+<p>To train the denoiser, we generate training pairs <code>(z, x)</code>, where each <code>x</code> is a clean MNIST digit. The noisy version <code>z</code> is created by adding Gaussian noise to <code>x</code> as follows:</p>
+<p style="text-align: center;">
+    <code>z = x + σϵ, &nbsp;&nbsp; where &nbsp;&nbsp; ϵ ∼ 𝒩(0, 𝐼)</code>
+</p>
+<p>Here, <code>σ</code> is the noise standard deviation, and <code>ϵ</code> is sampled from a standard normal distribution. We assume that <code>x</code> is normalized in the range <code>[0, 1]</code>.</p>
+<p>The results of this process for <code>σ</code> values in <code>[0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0]</code> are visualized:</p>
+
+<figure>
+    <img src="./media/noisy_images_example.png" alt="Hybrid Image 1", stype="height:200px">
+</figure>
+
+<h4 id="part1.2.1"> Training</h4>
+<ul>
+    <li><strong>Objective:</strong> Train a denoiser to remove noise from a noisy image <code>z</code> with <code>σ = 0.5</code>, mapping it to a clean image <code>x</code>.</li>
+    <li><strong>Dataset and Dataloader:</strong> 
+        <ul>
+            <li>The trianing MNIST dataset from <code>torchvision.datasets.MNIST</code> is used.</li>
+            <li>Batch size: <code>256</code>.</li>
+            <li>Total Epochs <code>5 epochs</code>.</li>
+        </ul>
+    </li>
+    <li><strong>Model:</strong> Unconditional U-net with hidden size: <code>D = 128</code>.</li>
+    <li><strong>Optimizer:</strong> Adam optimizer with a learning rate of <code>1e-4</code>.</li>
+    <li><strong>Loss Function:</strong>
+        <ul>
+            <li>Minimize the L2 loss defined as: <br>
+                <p style="text-align: center;">
+                    <code>L = 𝔼<sub>z,x</sub>[‖D<sub>θ</sub>(z) - x‖²]</code>
+                </p>
+            </li>
+        </ul>
+    </li>
+</ul>
+
+<p>The training loss curve is displayed below, and the model converged at the end of trianing.s</p>
+<figure>
+    <img src="./media/unconditional_training_loss_curve.png" alt="Hybrid Image 1", stype="height:200px">
+</figure>
+
+<h4>Results</h4>
+<p>The denoised images sampled from the test set are visualized after epoch 1 and epoch 5. The output after epoch 5 has more defined shapes and less noises.</p>
+
+<div class="image-row">
+    <figure>
+        <img src="./media/unconditional_model_output_epoch_1.png" alt="Hybrid Image 1", stype="height:200px">
+        <figcaption>Epoch 1</figcaption>
+    </figure>
+    
+    <figure>
+        <img src="./media/unconditional_model_output_epoch_4.png" alt="Hybrid Image 1", stype="height:200px">
+        <figcaption>Epoch 5</figcaption>
+    </figure>
+</div>
+
+<p>Denoised results are also visualized for out-of-distribution results, denoising images with different <code>σ </code>'s that it wasn't trained for.</p>
+
+<figure>
+    <img src="./media/out_of_distribution.png" alt="Hybrid Image 1", style="height:300px">
+</figure>
+
+<h3 id="part1.2.1"> Part 2: Training a Diffusion Model</h3>
+
+<p>In this section, I trained a U-Net model to iteratively denoise images by implementing the Denoising Diffusion Probabilistic Model (<a href="https://arxiv.org/abs/2006.11239" target="_blank">DDPM</a>).</p>
+<p>Instead of predicting the denoised image, we want the network to predict the noise. Thus, the new objective becomes:</p>
+    <p style="text-align: center;">
+        <code>L = 𝔼<sub>z,x</sub>[‖ε<sub>θ</sub>(z) - ε‖²]</code> 
+    </p>
+
+    <h4>Sampling Process</h4>
+    <p>For diffusion, the goal is to start with a pure noise image <code>ε ~ 𝒩(0, I)</code> and iteratively denoise it to generate a realistic image <code>x</code>. We use iterative denoising by sampling noisy images <code>x<sub>t</sub></code> for timesteps <code>t ∈ {0, 1, ..., T}</code>, where:</p>
+    <p style="text-align: center;">
+        <code>x<sub>t</sub> = √(α̅<sub>t</sub>) x<sub>0</sub> + √(1 - α̅<sub>t</sub>) ε</code>
+    </p>
+
+    <h4>The Variance Schedule is created by:</h4>
+    <ul>
+        <li><code>β₀ = 0.0001</code> and <code>β<sub>T</sub> = 0.02</code>, with evenly spaced values for other timesteps.
+        <li><code>α<sub>t</sub> = 1 - β<sub>t</sub></code>.</li>
+        <li><code>α̅<sub>t</sub> = ∏<sub>s=1</sub><sup>t</sup> α<sub>s</sub></code></li>
+    </ul>
+
+    <p>To denoise <code>x<sub>t</sub></code>, we condition the U-Net on the timestep <code>t</code> and minimize loss function:</p>
+    <p style="text-align: center;">
+        <code>L = 𝔼<sub>x<sub>t</sub>,x<sub>0</sub>,t</sub>[‖ε<sub>θ</sub>(x<sub>t</sub>, t) - ε‖²]</code> 
+    </p>
+
+    <h4>2.2 Time Conditioned U Net:</h4>
+
+    <figure>
+        <img src="./media/time_conditioned_unet.png" alt="Hybrid Image 1", style="height:500px">    
+    </figure>
+
+    <h4 id="part1.2.1"> Training</h4>
+    <ul>
+         <li><strong>Dataset and Dataloader:</strong> 
+            <ul>
+                <li>The trianing MNIST dataset from <code>torchvision.datasets.MNIST</code> is used.</li>
+                <li>Batch size: <code>128</code>.</li>
+                <li>Total Epochs <code>20 epochs</code>.</li>
+            </ul>
+        </li>
+        <li><strong>Model:</strong> Time Conditioned U-net with hidden size: <code>D = 64</code>.</li>
+        <li><strong>Optimizer:</strong> 
+            <ul>
+                <li>Adam optimizer with a learning rate of <code>1e-3</code></li>
+                <li>An exponential learning rate decay scheduler with a gamma value calculated as: <code>gamma = 0.1^(1.0 / num_epochs)</code></li>
+            </ul>
+        </li>
+
+        <li><strong>Loss Function:</strong>
+            <ul>
+                <li>Minimize the L2 loss defined as: <br>
+                    <p style="text-align: center;">
+                       <code>L = 𝔼<sub>x<sub>t</sub>,x<sub>0</sub>,t</sub>[‖ε<sub>θ</sub>(x<sub>t</sub>, t) - ε‖²]</code> 
+                    </p>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    
+    <p>The training loss curve is displayed below</p>
+    <figure>
+        <img src="./media/time_conditioned_training_curve.png" alt="Hybrid Image 1", stype="display: block; margin: 0 auto; height:200px">
+    </figure>
+    
+    <h4>Results</h4>
+    <p>The sampling function is implemented according to the <a href="https://arxiv.org/abs/2006.11239" target="_blank">DDPM</a> paper:</p>
+    <figure>
+        <img src="./media/sampling_function_1.png" alt="Hybrid Image 1", style="height:200px">
+    </figure>
+
+    <p>The generated images after epoch 5 and epoch 20 are displayed. The output after epoch 20 has more defined shapes and less noises.</p>
+    <figure>
+        <img src="./media/time_condition_epoch_5.png" alt="Hybrid Image 1", style="height:450px">
+    </figure>
+
+    <figure>
+        <img src="./media/time_conditioned_epoch_20.png" alt="Hybrid Image 1", style="height:450px">
+    </figure>
+
+
+    <h4>2.3 Class Conditioned U Net:</h4>
+
+    <p>To improve results and provide more control over image generation, we can condition the U-Net on the class of the digit (0–9). Some modifications are implemented on top of the implemention for time conditional U net:</p>
+    <ol>
+        <li>Each class (0-9) is used as input to the unet. Instead of a single scalar value for the class, a one-hot vector to represent the class. </li>
+        </li>
+        <li>
+            <strong>Add Fully Connected Blocks (FCBlocks):</strong>
+            <ul>
+                <li>2 additional FCBlocks are added to the U-Net architecture  These blocks will process the class-conditioning vector and integrate it with the U-Net’s other inputs.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Condition on Time and Class:</strong>
+            <ul>
+                <li>The U-Net now accept both the time step <code>t</code> and the class-conditioning vector <code>c</code> as inputs.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Unconditioned Scenarios:</strong>
+            <ul>
+                <li>A dropout mechanism is implemented to allow the model to work without class-conditioning. Specifically, for 10% of the time (<code>p<sub>uncond</sub> = 0.1</code>), set the class-conditioning vector <code>c</code> to zero.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4>Training</h4>
+    <figure>
+        <img src="./media/classconditioned_trianing_curve.png" alt="Hybrid Image 1", stype="display: block; margin: 0 auto; height:200px">
+    </figure>
+    
+    <h4>Results</h4>
+    <p>A classifier-free guidance(&gamma; = 0.5) sampling function is implemented according to the <a href="https://arxiv.org/abs/2006.11239" target="_blank">DDPM</a> paper:</p>
+    <figure>
+        <img src="./media/cfg.png" alt="Hybrid Image 1", style="height:200px">
+    </figure>
+    <p>The generated images after epoch 5 and epoch 20 are displayed. The output after epoch 20 has more defined shapes and less noises.</p>
+    <figure>
+        <img src="./media/classconditioned_epoch_5.png" alt="Hybrid Image 1", style="height:450px">
+        <figcaption>Epoch 5</figcaption>
+    </figure>
+
+    <figure>
+        <img src="./media/classconditioned_epoch_19.png" alt="Hybrid Image 1", style="height:450px">
+        <figcaption>Epoch 20</figcaption>
+    </figure>
+    
