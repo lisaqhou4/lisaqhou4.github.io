@@ -1,68 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeRF Framework Exploration</title>
-    <style>
-    body {
-        font-family: Calibri, sans-serif;
-        /* padding-left: 200px; */
-        margin-right: 80px;
-        margin-left: 80px;
-    }        
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>NeRF Framework Exploration</title>
+        <style>
+        body {
+            font-family: Calibri, sans-serif;
+            /* padding-left: 200px; */
+            margin-right: 80px;
+            margin-left: 80px;
+        }        
+        </style>
+    </head>
 <body>
-    <header>
-        <h1>NeRF Framework Exploration</h1>
-    </header>
+    <h1 id="main-title">NeRF for Varying Geometry (CS280 Final Pojrect) by Lisa Hou and Jasper Liu</h1>
+    <h2>Introduction</h2>
+    <p>Neural Radiance Fields (NeRF) have revolutionized the field of 3D scene reconstruction and novel view synthesis. NeRF works by representing a 3D scene as a continuous volumetric field, parameterized by a multilayer perceptron (MLP). Given a 3D position and viewing direction, NeRF predicts the density and emitted radiance at that point, which are composited along rays using volume rendering to synthesize realistic images from arbitrary viewpoints. This approach achieves great results in rendering intricate details and complex lighting in static scenes.</p>
+
+    <p>Despite its success, traditional NeRF models are constrained by several limitations. Most notably, NeRF assumes a static geometry and appearance, meaning that changes in scene attributes—such as geometry, lighting, or object configurations—require retraining separate models. This rigidness makes NeRF computationally expensive and less applicable to dynamic or variable scenes. Additionally, the method struggles to handle transient objects or temporal redundancies without significant modifications.</p>
+
+    <p>To address these challenges, various studies have proposed extensions to NeRF. NeRF-W , for example, introduces appearance and transient encodings to handle scene variations like changing lighting and transient objects, enabling robust rendering in in-the-wild scenarios. Similarly, Dynamic-NeRF (D-NeRF) extends NeRF to dynamic scenes by modeling spatial and temporal mappings. D-NeRF allows end-to-end training on scenes with both static and deforming objects without requiring pre-computed 3D reconstructions. While these advancements expand NeRF’s scope, they do not directly address the challenge of efficiently representing multiple geometries within a single unified model.</p>
+
+    <p>Inspired by these studies, we want to explore a unified NeRF framework capable of handling multiple geometries using conditional encodings. Specifically, our project explores the question: can a single trained NeRF model represent a scene or object with changeable geometries? To investigate this, we focus on the practical example of changing the outfits of a figure in the scene. Our approach incorporates outfit and appearance embeddings, enabling interactive 3D rendering where users can select an outfit from a predefined set without retraining the model. This work aims to make NeRF more flexible and computationally efficient while demonstrating its potential for novel interactive applications.</p>
+
+    <h2>Methodology</h2>
+
+    <h3>Dataset Preparation and Modification</h3>
+    <p>For this project, we utilized a dataset inspired by the methodology described in the Instruct-NeRF2NeRF paper, which consists of 350 images of a person wearing a T-shirt captured from diverse viewpoints. This dataset was chosen because it provides comprehensive coverage of the entire body, making it well-suited for our study.</p>
+
+    <p>To adapt the dataset, we used InstructPix2Pix to edit all 350 images into a second version where the person is dressed in a suit. The editing process employed the following text prompt:</p>
+    <blockquote>
+        "Change the person's outfit to a well-tailored black suit with a crisp white shirt and a navy blue tie, maintaining the same pose and lighting, photograph style, high resolution."
+    </blockquote>
+
+    <p>We carefully tuned the <code>text CFG</code> and <code>image guidance scale</code> parameters to ensure consistent results across the dataset. Although minor inconsistencies were initially observed in some edited images, they were manually corrected to maintain high-quality and realistic outputs. The final dataset comprises 350 original images of the person wearing a T-shirt (Subset 1) and 350 edited images where the person is wearing a suit (Subset 2), resulting in a complete dataset ready for training the model.</p>
+
+    <p>To validate the quality of the datasets, we generated 3D models using the NeRF Studio platform. The models reconstructed from both the T-shirt and suit datasets demonstrated high-quality rendering, confirming the usability and consistency of the prepared datasets for training unified NeRF models.</p>
+
+    <figure>
+        <img src="media/pix2pix_image_modification.png" alt="Dataset Modification Process">
+        <figcaption>An example of our dataset modification process. The left image shows the original figure wearing a T-shirt, while the right image demonstrates the same figure edited to wear a suit using the Pix2Pix model. The pose, gesture, and lighting of the figure are consistently preserved across the modifications. This ensures that the edited dataset maintains compatibility for NeRF training.</figcaption>
+    </figure>
+
+    <p>The processed dataset, now containing distinct subsets for different outfits, forms the foundation for training our NeRF model with conditional encoding.</p>
+
+    <h3>Model Set-up</h3>
+    <p>Our proposed NeRF model is designed to handle varying geometries by introducing additional embedding mechanisms and architectural modifications, extending the traditional NeRF framework.</p>
+
+    <p>To address the challenge of handling varying geometries, we introduce outfit embeddings and appearance embeddings which are inspired by NeRF-W. Outfit embeddings represent geometry-specific variations such as clothing or structural alterations, while appearance embeddings capture photometric variations like lighting or material properties. These embeddings are implemented as learnable lookup tables that map discrete indices (e.g., outfit configurations or appearance labels) to high-dimensional feature vectors. Each outfit is assigned to an outfit embedding, and an appearance embedding is associated with each image. During inference, these embeddings are concatenated with the positional and directional encodings of the rays, providing the model with additional contextual information. The inclusion of these embeddings enables the model to disentangle geometry-specific and appearance-specific features. For example, the outfit embedding allows the model to generate radiance fields corresponding to different geometries, while the appearance embedding ensures consistent visual fidelity across varying lighting or camera settings. This modular approach makes the model adaptable to dynamic or diverse datasets without requiring separate models for each configuration.</p>
+
+    <p>The MLP architecture is extended to process the additional embedding inputs. The XYZ positional encoding layers are modified to accept the concatenated positional and outfit embeddings, while the directional encoding layers incorporate appearance embeddings. Our implementation employs both coarse and fine models, adapted from the original NeRF. The coarse model operates on uniformly sampled points along each ray to produce an initial approximation of the scene’s geometry. The outputs of the coarse model, specifically the weights derived from the predicted densities, are then used to guide the sampling of additional points for the fine model. This hierarchical approach ensures that the fine model focuses its computational resources on regions of interest, such as edges or areas with higher density gradients, resulting in more accurate and detailed reconstructions.</p>
+
+    <figure>
+        <img src="media/model_structure.png" alt="NeRF Model Architecture"width="50%" >
+        <figcaption>NeRF model architecture.</figcaption>
+    </figure>
+
+    <p>During rendering, the model outputs densities and colors for each sampled point along a ray. These predictions are composited using volume rendering equations to compute the final pixel color. The rendering process integrates the contributions of static geometry, outfit-specific variations, and appearance-related effects. During inference, the model processes each ray by incorporating its corresponding appearance and outfit embeddings, allowing for geometry and photometric variations to be dynamically represented. Each ray is defined by its origin, direction, and sampled 3D points along its path. These inputs are concatenated with the corresponding high-dimensional appearance and outfit embeddings, which are retrieved from learned lookup tables based on the scene configuration.</p>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>NeRF Framework Project</title>
+    </head>
+    <body>
+        <h1>Experiments & Results</h1>
     
-    <section id="introduction">
-        <h2>Introduction</h2>
-        <p>Neural Radiance Fields (NeRF) revolutionize 3D scene reconstruction by representing scenes as volumetric fields parameterized by neural networks. However, traditional NeRF models struggle with dynamic scenes and require retraining for changes. Extensions like NeRF-W and D-NeRF address some limitations but lack efficient handling of multiple geometries within one model. Our project explores using conditional encodings to enable geometry variations, demonstrated with interactive outfit changes for a 3D figure.</p>
-    </section>
-
-    <section id="methodology">
-        <h2>Methodology</h2>
-
-        <h3>Dataset Preparation and Modification</h3>
-        <p>We adapted the dataset from Instruct-NeRF2NeRF, editing images using InstructPix2Pix to create two subsets: original T-shirt images and modified suit images. This ensures consistency for NeRF training.</p>
+        <h2>NeRF Model Training</h2>
+        <p>The NeRF model in this project is a multilayer perceptron (MLP) consisting of 8 layers with 256 hidden units each, designed to predict density (sigma) and color (RGB) from ray data. A skip connection at the 4th layer improves gradient flow and captures fine-grained details. Input features include a 63-dimensional positional encoding of 3D coordinates (xyz), a 27-dimensional directional encoding of view directions, and two additional embeddings: a 48-dimensional outfit embedding and a 48-dimensional appearance embedding.</p>
+    
+        <p>The model was trained on a dataset with an image resolution of 400×400 with 200 training images (100 image from each outfit). The hyperparameters that yield the best validation PSNR include 32 coarse samples, 64 importance samples per ray, a batch size of 1024, 15 epochs, and a learning rate of 5 × 10<sup>-4</sup> adjusted using a cosine scheduler. The embedding dimensions for positional, directional, outfit, and appearance encodings were set to 10, 4, 48, and 48 frequencies, respectively. Training used a combined mean squared error (MSE) loss for coarse and fine predictions to optimize reconstruction accuracy, while Peak Signal-to-Noise Ratio (PSNR) was monitored for both the training set and a validation set of 8 images. The PSNR validation during training was reported in Figure 3, and the validation PSNR achieved is 23.</p>
+    
         <figure>
-            <img src="media/pix2pix_image_modification.png" alt="Dataset modification example" >
-            <figcaption>An example of dataset modification: original T-shirt (left) to suit (right).</figcaption>
-        </figure>
-
-        <h3>Model Set-up</h3>
-        <p>The model introduces outfit and appearance embeddings to handle varying geometries and photometric features. Modified architecture incorporates these embeddings alongside positional encodings, enabling the representation of different geometries dynamically. A hierarchical coarse-to-fine approach ensures computational efficiency.</p>
-        <figure>
-            <img src="media/model_structure.png" alt="NeRF model architecture" width="70%">
-            <figcaption>NeRF model architecture.</figcaption>
-        </figure>
-    </section>
-
-    <section id="experiments-results">
-        <h2>Experiments & Results</h2>
-
-        <h3>NeRF Model Training</h3>
-        <p>The model uses 8-layer MLPs with additional embeddings for outfit and appearance. Trained on 400×400 images for 15 epochs, it achieved a validation PSNR of 23. Regularization techniques like weight decay and noise standardization were applied to prevent overfitting.</p>
-        <figure>
-            <img src="media/val_psnr.png" alt="Validation PSNR" width="70%">
-            <figcaption>Validation PSNR during training.</figcaption>
+            <img src="media/val_psnr.png" alt="Validation PSNR"  width="50%">
+            <figcaption>Validation PSNR</figcaption>
         </figure>
         <figure>
-            <img src="media/trian_loss.png" alt="Training Loss" width="70%">
-            <figcaption>Training loss over epochs.</figcaption>
+            <img src="media/trian_loss.png" alt="Training Loss Curve"  width="50%">
+            <figcaption>Training Loss Curve</figcaption>
         </figure>
-        <figure>
-            <img src="media/psnr_table.png" alt="PSNR Comparison Table" width="70%">
-            <figcaption>Validation PSNR comparison across configurations.</figcaption>
-        </figure>
-    </section>
+    
 
-    <footer>
-        <p>&copy; 2024 NeRF Framework Exploration Project</p>
-    </footer>
+        <figure>
+            <img src="media/pred_gt.png" alt="Image Generated from Validation Set" width="60%">
+            <figcaption>Image Generated from Validation Set</figcaption>
+        </figure>
+    
+        <p>We also experimented with different hyperparameter configurations. This included testing 36- and 58-dimensional embeddings for outfit and appearance, increasing the dataset resolution (which proved computationally prohibitive), and using 128 importance samples per ray with 64 coarse samples. After observing that validation PSNR remained stable while training PSNR continued to increase, we incorporated regularization to mitigate overfitting by adding weight decay with 1e-4 as the coefficient and noise standardization of 1.2, which introduces Gaussian noise to the density predictions, preventing the model from overfitting to high-density regions.</p>
+    
+        <p>The predicted image captures the overall structure and pose of the figure, as well as key features such as the suit's color and silhouette. While the generated image is generally consistent with the ground truth in terms of geometry and global appearance, some minor artifacts and blurring are present, particularly along the edges of the figure and in finer details of the outfit.</p>
+    
+        <figure>
+            <img src="media/psnr_table.png" alt="Validation PSNR Comparison" width="50%">
+            <figcaption>Validation PSNR Comparison</figcaption>
+        </figure>
+    
+        <h2>Outfit Embedding and Viewpoint Interpolation</h2>
+        <p>To demonstrate the unified NeRF model's capability to handle multiple geometries and generate transitions between them, we implemented interpolation techniques for both outfit embeddings and camera viewpoints. The goal was to validate the model's ability to represent multiple geometries and generate intermediate states between different conditions.</p>
+    
+        <p>For the first part of the experiment, we focused on interpolating outfit embeddings at a fixed camera viewpoint. Using the learned embedding weights, we created virtual outfit embeddings by linearly interpolating between the embedding vectors corresponding to two key outfits: a T-shirt and a suit. These interpolations were parameterized by an &alpha; value, ranging from 0 (representing the T-shirt embedding) to 1 (representing the suit embedding), with intermediate &alpha; values generating blended representations. Five discrete steps of interpolation were rendered, as illustrated in Figure 4. The results demonstrated a clear progression from one outfit to the other, successfully capturing the key differences between the T-shirt and suit outfits.</p>
+    
+        <figure>
+            <img src="media/fixed_point_interpolation.png" alt="Outfit Interpolation in the fixed point" width="100%">
+            <figcaption>Outfit Interpolation in the Fixed Point</figcaption>
+        </figure>
+    
+        <p>To further evaluate the model's adaptability, we extended the interpolation process to include both outfit embeddings and camera viewpoints. Starting with two key samples from the dataset—one depicting the suit outfit from a specific viewpoint and the other showing the T-shirt outfit from a different viewpoint—we used the model to generate intermediate frames by simultaneously interpolating the outfit embeddings and camera parameters. This dual-interpolation process demonstrated the model's ability to handle variations in both geometry and perspective, producing a sequence of transitions that highlight its flexibility. Figure 5 presents a selection of frames from the interpolation.</p>
+    
+        <figure>
+            <img src="media/Interpolation.png" alt="Outfit and Viewpoint Interpolation" width="100%">
+            <figcaption>Outfit and Viewpoint Interpolation Generated by the Model</figcaption>
+        </figure>
+
+        <figure>
+            <img src="media/outfit_change.gif" alt="Outfit change demonstration" width="30%">
+            <figcaption>Interactive outfit change demonstration.</figcaption>
+        </figure>
+    
+        <p>While the results demonstrate the model’s capability to process dynamic variations, they also expose some limitations. The transitions between outfits showed significant artifacts, including inconsistent geometry and structural instability. During the interpolation process, the model appeared to struggle with preserving coherent spatial relationships, resulting in glitching and blending artifacts as it attempted to combine transitions between viewpoints and geometric configurations. These observations might suggest that the current embedding space does not adequately disentangle geometry, appearance, and viewpoint, leading to unintended interactions during inference.</p>
+    
+        <p>To address these challenges, future work could explore different approaches. Incorporating additional training data with intermediate geometries and viewpoints could help the model learn smoother transitions. A geometry-aware loss function, such as one based on structural similarity or surface regularity, could enforce smoother and more consistent interpolations. Moreover, enhancing the embedding architecture, such as adopting higher-dimensional or hierarchical embeddings, could allow for a more expressive representation of outfit and appearance variations. These modifications would aim to mitigate the observed artifacts, ultimately improving the robustness and generating more realistic and smoother outputs.</p>
+    </body>
+    </html>
+    
+    
+    <!-- Additional sections like Experiments & Results can follow similarly -->
 </body>
 </html>
 
