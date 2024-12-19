@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeRF Framework Exploration</title>
+    <style>
+    body {
+        font-family: Calibri, sans-serif;
+        /* padding-left: 200px; */
+        margin-right: 80px;
+        margin-left: 80px;
+    }        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NeRF Framework Exploration</h1>
+    </header>
+    
+    <section id="introduction">
+        <h2>Introduction</h2>
+        <p>Neural Radiance Fields (NeRF) revolutionize 3D scene reconstruction by representing scenes as volumetric fields parameterized by neural networks. However, traditional NeRF models struggle with dynamic scenes and require retraining for changes. Extensions like NeRF-W and D-NeRF address some limitations but lack efficient handling of multiple geometries within one model. Our project explores using conditional encodings to enable geometry variations, demonstrated with interactive outfit changes for a 3D figure.</p>
+    </section>
+
+    <section id="methodology">
+        <h2>Methodology</h2>
+
+        <h3>Dataset Preparation and Modification</h3>
+        <p>We adapted the dataset from Instruct-NeRF2NeRF, editing images using InstructPix2Pix to create two subsets: original T-shirt images and modified suit images. This ensures consistency for NeRF training.</p>
+        <figure>
+            <img src="media/pix2pix_image_modification.png" alt="Dataset modification example" >
+            <figcaption>An example of dataset modification: original T-shirt (left) to suit (right).</figcaption>
+        </figure>
+
+        <h3>Model Set-up</h3>
+        <p>The model introduces outfit and appearance embeddings to handle varying geometries and photometric features. Modified architecture incorporates these embeddings alongside positional encodings, enabling the representation of different geometries dynamically. A hierarchical coarse-to-fine approach ensures computational efficiency.</p>
+        <figure>
+            <img src="media/model_structure.png" alt="NeRF model architecture" width="70%">
+            <figcaption>NeRF model architecture.</figcaption>
+        </figure>
+    </section>
+
+    <section id="experiments-results">
+        <h2>Experiments & Results</h2>
+
+        <h3>NeRF Model Training</h3>
+        <p>The model uses 8-layer MLPs with additional embeddings for outfit and appearance. Trained on 400×400 images for 15 epochs, it achieved a validation PSNR of 23. Regularization techniques like weight decay and noise standardization were applied to prevent overfitting.</p>
+        <figure>
+            <img src="media/val_psnr.png" alt="Validation PSNR" width="70%">
+            <figcaption>Validation PSNR during training.</figcaption>
+        </figure>
+        <figure>
+            <img src="media/trian_loss.png" alt="Training Loss" width="70%">
+            <figcaption>Training loss over epochs.</figcaption>
+        </figure>
+        <figure>
+            <img src="media/psnr_table.png" alt="PSNR Comparison Table" width="70%">
+            <figcaption>Validation PSNR comparison across configurations.</figcaption>
+        </figure>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 NeRF Framework Exploration Project</p>
+    </footer>
+</body>
+</html>
+
